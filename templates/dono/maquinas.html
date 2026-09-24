@@ -1,0 +1,119 @@
+{% extends 'painel.html' %}
+{% from 'dono/_macros.html' import badge_revisao, descricao_maquina %}
+{% block titulo %}Máquinas{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Máquinas</h1>
+<p class="suave subtitulo-app">Cadastro das máquinas da fazenda. Revisões, consertos e problemas ficam na aba
+  <a href="{{ url_for('dono.manutencao') }}">Manutenção</a>.</p>
+
+<div class="card">
+  <h2>Máquinas da fazenda</h2>
+  {% if not maquinas %}
+    <p class="vazio">Nenhuma máquina cadastrada. Use o formulário abaixo.</p>
+  {% else %}
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr><th>Máquina</th><th>Horímetro</th><th>Revisão preventiva</th><th>Gasto (12 meses)</th><th>Problemas</th><th></th></tr></thead>
+        <tbody>
+        {% for m in maquinas %}
+          <tr class="{{ 'inativo' if not m.ativo }}">
+            <td>
+              <strong>{{ TIPOS.get(m.tipo, TIPOS.outra).icone }} {{ m.nome }}</strong><br>
+              <small class="suave">{{ descricao_maquina(m) }}</small>
+            </td>
+            <td>{{ m.horimetro|num_br }} h</td>
+            <td>{{ badge_revisao(m.revisao) }}</td>
+            <td>{{ m.gasto_ano|reais }}</td>
+            <td>{% if m.abertas %}<span class="badge vermelho">{{ m.abertas }} aberto(s)</span>{% else %}<span class="suave">—</span>{% endif %}</td>
+            <td class="acoes">
+              {% if m.ativo %}<a href="{{ url_for('dono.manutencao', maquina=m.id) }}" class="botao pequeno">Manutenção</a>{% endif %}
+              <a href="{{ url_for('dono.maquinas', editar=m.id) }}#form-maquina" class="botao pequeno contorno">Editar</a>
+              <form method="post">{{ csrf_campo() }}
+                <input type="hidden" name="acao" value="ativo"><input type="hidden" name="id" value="{{ m.id }}">
+                <input type="hidden" name="valor" value="{{ 0 if m.ativo else 1 }}">
+                <button class="botao pequeno contorno">{{ 'Desativar' if m.ativo else 'Reativar' }}</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+
+<form method="post" class="card formulario" id="form-maquina"
+      data-api="{{ url_for('api.catalogo') }}"
+      data-por-tipo="{{ por_tipo|tojson|forceescape }}"
+      data-editando="{{ 1 if editar else 0 }}">
+  {{ csrf_campo() }}
+  <input type="hidden" name="acao" value="salvar_maquina">
+  <input type="hidden" name="id" value="{{ editar.id if editar }}">
+  <h2>{{ 'Editar máquina' if editar else 'Cadastrar máquina' }}</h2>
+
+  <div class="duas-colunas">
+    <div>
+      {% if not editar %}
+        <div class="campo busca-catalogo">
+          <label for="busca">Buscar no catálogo</label>
+          <input id="busca" type="search" autocomplete="off" placeholder="Digite a marca ou o modelo. Ex.: Arbus, K3, MF 4275">
+          <small>Preenche tipo, marca e modelo automaticamente. Não achou? Preencha os campos abaixo.</small>
+          <ul id="busca-resultados" class="busca-resultados" hidden></ul>
+        </div>
+      {% endif %}
+
+      <div class="form-grade">
+        <div class="campo">
+          <label for="tipo">Tipo *</label>
+          <select id="tipo" name="tipo">
+            {% for chave, t in TIPOS.items() %}
+              <option value="{{ chave }}" {{ 'selected' if editar and editar.tipo == chave }}>{{ t.icone }} {{ t.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="campo">
+          <label for="nome">Apelido / identificação</label>
+          <input id="nome" name="nome" value="{{ editar.nome if editar }}" placeholder="Ex.: Trator 02">
+        </div>
+        <div class="campo">
+          <label for="marca">Marca</label>
+          <input id="marca" name="marca" list="lista-marcas" autocomplete="off" value="{{ editar.marca or '' if editar }}">
+          <datalist id="lista-marcas"></datalist>
+        </div>
+        <div class="campo">
+          <label for="modelo">Modelo</label>
+          <input id="modelo" name="modelo" list="lista-modelos" autocomplete="off" value="{{ editar.modelo or '' if editar }}">
+          <datalist id="lista-modelos"></datalist>
+        </div>
+        <div class="campo">
+          <label for="ano">Ano</label>
+          <input type="number" min="1950" max="2100" id="ano" name="ano" value="{{ editar.ano or '' if editar }}">
+        </div>
+        <div class="campo">
+          <label for="horimetro">Horímetro atual (h)</label>
+          <input type="number" step="0.1" min="0" id="horimetro" name="horimetro" value="{{ editar.horimetro if editar else 0 }}">
+        </div>
+        <div class="campo">
+          <label for="revisao_horas">Revisão preventiva a cada (h)</label>
+          <input type="number" step="1" min="1" id="revisao_horas" name="revisao_horas" value="{{ (editar.revisao_horas|int) if editar and editar.revisao_horas }}">
+          <small>Em branco: usa o padrão do tipo.</small>
+        </div>
+        <div class="campo">
+          <label for="preco">Valor (R$)</label>
+          <input type="number" step="0.01" min="0" id="preco" name="preco" value="{{ editar.preco or '' if editar }}">
+          <small id="preco-referencia"></small>
+        </div>
+      </div>
+    </div>
+
+    <aside class="ficha-tipo" id="ficha-tipo" aria-live="polite"></aside>
+  </div>
+
+  <button class="botao">{{ 'Salvar alterações' if editar else 'Cadastrar máquina' }}</button>
+  {% if editar %}<a href="{{ url_for('dono.maquinas') }}" class="botao contorno">Cancelar</a>{% endif %}
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/cadastro_maquina.js') }}"></script>
+{% endblock %}

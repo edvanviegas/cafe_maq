@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block titulo %}Custos de Manutenção{% endblock %}
+{% block meta %}<meta name="description" content="Custos de manutenção de maquinário agrícola para fazendas de café: estimativas, calculadora e dicas de manutenção preventiva.">{% endblock %}
+
+{% block principal %}
+<main>
+    <div class="hero">
+      <div class="container">
+        <h1>Quanto custa manter as máquinas do seu cafezal?</h1>
+        <p>Estime o custo de manutenção de tratores, colhedoras, pulverizadores e outros equipamentos
+           usados na cafeicultura, e descubra como a manutenção preventiva ajuda a economizar.</p>
+        <a href="{{ url_for('publico.calculadora') }}" class="botao">Calcular custos</a>
+        <a href="{{ url_for('publico.maquinas') }}" class="botao secundario">Ver máquinas</a>
+      </div>
+    </div>
+
+    <section>
+      <div class="container">
+        <h2>Por que controlar a manutenção?</h2>
+        <p>A mecanização da colheita e dos tratos culturais trouxe mais produtividade para a cafeicultura
+           brasileira, mas também um custo que muitas vezes passa despercebido: a <strong>manutenção das máquinas</strong>.
+           Reparos, peças, lubrificantes e horas paradas em plena safra pesam no custo de produção de cada saca.</p>
+        <p>Conhecer esses valores permite planejar o orçamento, decidir o momento certo de trocar um equipamento
+           e comparar se vale mais a pena ter a máquina própria ou terceirizar o serviço.</p>
+
+        <div class="destaque">
+          <strong>Você sabia?</strong> O custo de reparo de uma máquina <em>aumenta com a idade</em>.
+          Um trator com 8.000 horas de uso gasta muito mais por hora em reparos do que um trator novo.
+          Nossa calculadora leva isso em conta.
+        </div>
+      </div>
+    </section>
+
+    <section style="background: var(--branco);">
+      <div class="container">
+        <h2>O que você encontra aqui</h2>
+        <div class="grade">
+          <div class="card">
+            <div class="icone">🚜</div>
+            <h3>Catálogo de máquinas</h3>
+            <p>Os principais equipamentos da lavoura de café, com preço de referência, vida útil e consumo.</p>
+            <p><a href="{{ url_for('publico.maquinas') }}">Ver catálogo →</a></p>
+          </div>
+          <div class="card">
+            <div class="icone">🧮</div>
+            <h3>Calculadora de custos</h3>
+            <p>Informe o preço, as horas de uso e a idade da máquina e veja o custo anual e por hora.</p>
+            <p><a href="{{ url_for('publico.calculadora') }}">Usar calculadora →</a></p>
+          </div>
+          <div class="card">
+            <div class="icone">🛠️</div>
+            <h3>Manutenção preventiva</h3>
+            <p>Checklists e boas práticas para reduzir quebras e aumentar a vida útil dos equipamentos.</p>
+            <p><a href="{{ url_for('publico.manutencao') }}">Ver dicas →</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="chamada-sistema">
+          <div>
+            <h2>Gerencie a manutenção da sua fazenda</h2>
+            <p>Cadastre máquinas e funcionários, distribua atividades e receba relatórios diários com ponto,
+               horímetro e problemas nas máquinas. Acompanhe o desempenho por dia, semana e mês.</p>
+          </div>
+          <a href="{{ url_for('auth.cadastro') }}" class="botao grande">Criar conta grátis</a>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="container">
+        <h2>Composição do custo</h2>
+        <div class="numeros">
+          <div class="numero"><strong>🔩</strong><span><b>Reparos e peças</b><br>troca de componentes desgastados e consertos</span></div>
+          <div class="numero"><strong>🛢️</strong><span><b>Lubrificantes</b><br>óleos, graxas e filtros</span></div>
+          <div class="numero"><strong>⛽</strong><span><b>Combustível</b><br>diesel ou gasolina por hora trabalhada</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}

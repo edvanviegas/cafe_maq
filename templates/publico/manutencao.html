@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block titulo %}Manutenção Preventiva{% endblock %}
+
+{% block principal %}
+<main>
+    <div class="titulo-pagina">
+      <div class="container">
+        <h1>Manutenção preventiva</h1>
+        <p>Cuidar antes de quebrar custa menos do que consertar no meio da safra.</p>
+      </div>
+    </div>
+
+    <section>
+      <div class="container">
+        <h2>Tipos de manutenção</h2>
+        <div class="grade">
+          <div class="card">
+            <div class="icone">📅</div>
+            <h3>Preventiva</h3>
+            <p>Feita em intervalos programados (horas de uso ou calendário): trocas de óleo, filtros,
+               lubrificação e revisões. Evita a maior parte das quebras.</p>
+          </div>
+          <div class="card">
+            <div class="icone">🔍</div>
+            <h3>Preditiva</h3>
+            <p>Acompanha o estado da máquina (ruídos, vibração, temperatura, análise de óleo) para
+               trocar peças no momento certo, antes que falhem.</p>
+          </div>
+          <div class="card" style="border-top-color: var(--vermelho);">
+            <div class="icone">🚨</div>
+            <h3>Corretiva</h3>
+            <p>Conserto depois da quebra. É a mais cara: além da peça, há a máquina parada,
+               atraso na colheita e perda de qualidade do café.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="background: var(--branco);">
+      <div class="container">
+        <h2>Calendário da fazenda de café</h2>
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr><th>Período</th><th>Fase da lavoura</th><th>O que fazer com as máquinas</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Fevereiro – Abril</td><td>Pré-colheita</td><td>Revisão completa das colhedoras e derriçadeiras; comprar peças de reposição</td></tr>
+              <tr><td>Maio – Setembro</td><td>Colheita</td><td>Inspeções diárias, lubrificação, limpeza ao fim de cada turno</td></tr>
+              <tr><td>Setembro – Outubro</td><td>Pós-colheita</td><td>Lavar, lubrificar e guardar colhedoras em local coberto</td></tr>
+              <tr><td>Outubro – Março</td><td>Tratos culturais</td><td>Foco em pulverizadores, roçadeiras e adubadoras; calibração de bicos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2>Boas práticas</h2>
+        <div class="grade">
+          <div class="card">
+            <h3>📋 Registre tudo</h3>
+            <p>Anote cada manutenção, peça trocada e valor gasto. Esse histórico mostra qual máquina
+               está custando caro demais.</p>
+          </div>
+          <div class="card">
+            <h3>⏱️ Use o horímetro</h3>
+            <p>Programe as revisões pelas horas trabalhadas, seguindo o manual do fabricante.</p>
+          </div>
+          <div class="card">
+            <h3>👨‍🔧 Treine os operadores</h3>
+            <p>Operadores bem treinados evitam sobrecarga, identificam problemas cedo e fazem a
+               checagem diária corretamente.</p>
+          </div>
+          <div class="card">
+            <h3>🏠 Guarde em local coberto</h3>
+            <p>Sol e chuva aceleram a corrosão e o desgaste de mangueiras, pneus e componentes elétricos.</p>
+          </div>
+        </div>
+
+        <div class="destaque">
+          <strong>Hora de trocar?</strong> Quando o custo anual de reparos se aproxima do custo de
+          depreciação de uma máquina nova, ou a máquina já passou da vida útil estimada, é hora de
+          avaliar a substituição. Veja a projeção na <a href="{{ url_for('publico.calculadora') }}">calculadora</a>.
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}

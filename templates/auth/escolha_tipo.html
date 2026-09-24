@@ -1,0 +1,11 @@
+{% set tipo_marcado = (dados.tipo if dados is defined else 'dono') %}
+<div class="escolha-tipo">
+  <label class="opcao-tipo">
+    <input type="radio" name="tipo" value="dono" {{ 'checked' if tipo_marcado == 'dono' }}>
+    <span><strong>Dono da fazenda</strong><small>Cadastra a fazenda, funcionários, máquinas e atividades</small></span>
+  </label>
+  <label class="opcao-tipo">
+    <input type="radio" name="tipo" value="funcionario" {{ 'checked' if tipo_marcado == 'funcionario' }}>
+    <span><strong>Funcionário</strong><small>Bate ponto e envia o relatório do dia</small></span>
+  </label>
+</div>

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block titulo %}Calculadora{% endblock %}
+
+{% block principal %}
+<main>
+    <div class="titulo-pagina">
+      <div class="container">
+        <h1>Calculadora de custo de manutenção</h1>
+        <p>Simule o custo anual de reparos, lubrificantes e combustível de uma máquina.</p>
+      </div>
+    </div>
+
+    <section>
+      <div class="container calculadora">
+
+        <form id="form-calculo" class="card">
+          <div class="campo">
+            <label for="maquina">Máquina</label>
+            <select id="maquina"></select>
+          </div>
+
+          <div class="campo">
+            <label for="preco">Preço da máquina nova (R$)</label>
+            <input type="number" id="preco" min="0" step="100">
+            <small>Use o valor de uma máquina nova equivalente, mesmo que a sua seja usada.</small>
+          </div>
+
+          <div class="campo">
+            <label for="horasAno">Horas de uso por ano</label>
+            <input type="number" id="horasAno" min="1" step="10">
+          </div>
+
+          <div class="campo">
+            <label for="horasUsadas">Horas já trabalhadas (horímetro)</label>
+            <input type="number" id="horasUsadas" min="0" step="100" value="0">
+            <small>0 para máquina nova.</small>
+          </div>
+
+          <div class="campo">
+            <label for="consumo">Consumo de combustível (L/h)</label>
+            <input type="number" id="consumo" min="0" step="0.1">
+            <small>Implementos tracionados: 0 (o consumo entra no trator).</small>
+          </div>
+
+          <div class="campo">
+            <label for="precoCombustivel">Preço do combustível (R$/L)</label>
+            <input type="number" id="precoCombustivel" min="0" step="0.01">
+          </div>
+
+          <div class="campo">
+            <label for="sacas">Produção da fazenda (sacas/ano) — opcional</label>
+            <input type="number" id="sacas" min="0" step="10" placeholder="Ex.: 2000">
+          </div>
+        </form>
+
+        <div>
+          <div class="resultado-total">
+            <span>Custo total estimado no ano</span>
+            <strong id="res-total">R$ 0,00</strong>
+            <span id="res-hora"></span>
+          </div>
+
+          <div class="card linhas-resultado">
+            <h3>Detalhamento anual</h3>
+            <div><span>🔩 Reparos e peças</span><strong id="res-reparo"></strong></div>
+            <div><span>🛢️ Lubrificantes e filtros</span><strong id="res-lubrificante"></strong></div>
+            <div><span>⛽ Combustível</span><strong id="res-combustivel"></strong></div>
+            <div><span>📦 Custo por saca</span><strong id="res-saca">—</strong></div>
+            <div><span>⏳ Vida útil restante</span><strong id="res-vida"></strong></div>
+          </div>
+
+          <div class="card" style="margin-top:20px">
+            <h3>Projeção de reparos nos próximos 5 anos</h3>
+            <p>Repare como o gasto com reparos cresce conforme a máquina envelhece.</p>
+            <div class="tabela-wrap">
+              <table>
+                <thead>
+                  <tr><th>Ano</th><th>Horímetro</th><th>Reparos</th><th></th></tr>
+                </thead>
+                <tbody id="tabela-projecao"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='js/dados.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/calculadora.js') }}"></script>
+{% endblock %}

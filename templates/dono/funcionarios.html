@@ -1,0 +1,65 @@
+{% extends 'painel.html' %}
+{% block titulo %}Funcionários{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Funcionários</h1>
+
+<div class="duas-colunas">
+  <div class="card">
+    <h2>Equipe da fazenda</h2>
+    {% if not funcionarios %}
+      <p class="vazio">Nenhum funcionário cadastrado ainda.</p>
+    {% else %}
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Função</th><th>Conta</th><th>Agora</th><th>Último relatório</th><th></th></tr></thead>
+          <tbody>
+          {% for f in funcionarios %}
+            <tr class="{{ 'inativo' if not f.ativo }}">
+              <td><strong>{{ f.nome }}</strong><br><small class="suave">{{ f.email }}</small></td>
+              <td>{{ f.funcao or '—' }}</td>
+              <td>{% if f.usuario_id %}<span class="badge verde">Vinculado</span>{% else %}<span class="badge amarelo">Aguardando cadastro</span>{% endif %}</td>
+              <td>{% if f.em_servico %}<span class="badge verde">Trabalhando desde {{ f.em_servico|hora_br }}</span>{% else %}<span class="suave">—</span>{% endif %}</td>
+              <td>{{ f.ultimo_relatorio|data_br }}</td>
+              <td>
+                <form method="post">{{ csrf_campo() }}
+                  <input type="hidden" name="acao" value="ativo"><input type="hidden" name="id" value="{{ f.id }}">
+                  <input type="hidden" name="valor" value="{{ 0 if f.ativo else 1 }}">
+                  <button class="botao pequeno {{ 'contorno' if f.ativo }}">{{ 'Desativar' if f.ativo else 'Reativar' }}</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+
+  <form method="post" class="card formulario">
+    {{ csrf_campo() }}
+    <input type="hidden" name="acao" value="adicionar">
+    <h2>Cadastrar funcionário</h2>
+    <div class="campo">
+      <label for="nome">Nome *</label>
+      <input id="nome" name="nome" required>
+    </div>
+    <div class="campo">
+      <label for="email">E-mail *</label>
+      <input type="email" id="email" name="email" required>
+    </div>
+    <div class="campo">
+      <label for="funcao">Função</label>
+      <input id="funcao" name="funcao" placeholder="Ex.: Operador de máquinas" list="funcoes">
+      <datalist id="funcoes">
+        <option value="Operador de máquinas"><option value="Tratorista"><option value="Mecânico">
+        <option value="Colhedor"><option value="Encarregado"><option value="Serviços gerais">
+      </datalist>
+    </div>
+    <button class="botao">Cadastrar</button>
+    <div class="destaque pequeno-texto">
+      <strong>Como o funcionário acessa?</strong> Ele cria uma conta do tipo <em>Funcionário</em>
+      (ou entra com o Google) usando <strong>este mesmo e-mail</strong>. O vínculo com a fazenda é automático.
+    </div>
+  </form>
+</div>
+{% endblock %}

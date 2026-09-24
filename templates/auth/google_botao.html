@@ -1,0 +1,26 @@
+{# Botão "Entrar com o Google" (Google Identity Services). Só aparece se GOOGLE_CLIENT_ID estiver configurado. #}
+{% if google_client_id %}
+<div class="divisor"><span>ou</span></div>
+
+<form id="form-google" method="post" action="{{ url_for('auth.google') }}">
+  {{ csrf_campo() }}
+  <input type="hidden" name="credential" id="google-credential">
+</form>
+
+<div id="g_id_onload"
+     data-client_id="{{ google_client_id }}"
+     data-callback="retornoGoogle"
+     data-auto_prompt="false"></div>
+<div class="g_id_signin google-botao"
+     data-type="standard" data-theme="outline" data-size="large"
+     data-text="continue_with" data-shape="pill" data-locale="pt-BR" data-logo_alignment="left"></div>
+
+<script>
+  // O Google devolve um token assinado; enviamos para o servidor validar.
+  function retornoGoogle(resposta) {
+    document.getElementById("google-credential").value = resposta.credential;
+    document.getElementById("form-google").submit();
+  }
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+{% endif %}

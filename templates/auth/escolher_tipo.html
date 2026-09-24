@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block titulo %}Tipo de conta{% endblock %}
+{% block conteudo %}
+<div class="caixa-login card">
+  <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" class="logo-grande">
+  <h1>Olá, {{ google.nome|primeiro_nome }}!</h1>
+  <p class="suave">Falta só uma coisa: como você vai usar o CafeMaq?</p>
+
+  <form method="post" class="formulario">
+    {{ csrf_campo() }}
+    {% include 'auth/escolha_tipo.html' %}
+    <button class="botao largo" style="margin-top:16px">Continuar</button>
+  </form>
+</div>
+{% endblock %}

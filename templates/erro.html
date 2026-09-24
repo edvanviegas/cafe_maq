@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block titulo %}Ops{% endblock %}
+{% block conteudo %}
+<div class="card vazio-grande">
+  <h1>Ops!</h1>
+  <p>{{ mensagem }}</p>
+  <a href="{{ voltar or url_for('publico.index') }}" class="botao">Voltar</a>
+</div>
+{% endblock %}

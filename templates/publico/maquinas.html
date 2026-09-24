@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block titulo %}Máquinas{% endblock %}
+
+{% block principal %}
+<main>
+    <div class="titulo-pagina">
+      <div class="container">
+        <h1>Máquinas da cafeicultura</h1>
+        <p>Valores de referência e custo estimado de manutenção no primeiro ano de uso.</p>
+      </div>
+    </div>
+
+    <section>
+      <div class="container">
+        <div class="aviso">
+          ⚠️ Os preços são estimativas de referência e variam com marca, modelo e região.
+          Use a <a href="{{ url_for('publico.calculadora') }}">calculadora</a> para simular com os seus valores.
+        </div>
+        <div class="grade" id="lista-maquinas"></div>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='js/dados.js') }}"></script>
+  <script>
+    // Monta um card para cada máquina da base de dados
+    const lista = document.getElementById("lista-maquinas");
+
+    MAQUINAS.forEach(function (m) {
+      const reparoAno1 = reparoNoPeriodo(m, m.preco, 0, m.horasAno);
+      const consumoTexto = m.consumo > 0
+        ? m.consumo.toLocaleString("pt-BR") + " L/h (" + m.combustivel + ")"
+        : "pelo trator";
+
+      const itens = m.itensPreventivos.map(function (i) { return "<li>" + i + "</li>"; }).join("");
+
+      lista.innerHTML +=
+        '<div class="card">' +
+          '<div class="icone">' + m.icone + '</div>' +
+          '<h3>' + m.nome + '</h3>' +
+          '<p>' + m.descricao + '</p>' +
+          '<div class="dados-maquina">' +
+            '<div><span>Preço de referência</span><strong>' + formatarReais(m.preco) + '</strong></div>' +
+            '<div><span>Vida útil</span><strong>' + m.vidaUtil.toLocaleString("pt-BR") + ' h</strong></div>' +
+            '<div><span>Uso típico</span><strong>' + m.horasAno + ' h/ano</strong></div>' +
+            '<div><span>Consumo</span><strong>' + consumoTexto + '</strong></div>' +
+            '<div><span>Reparos no 1º ano</span><strong>' + formatarReais(reparoAno1) + '</strong></div>' +
+          '</div>' +
+          '<ul>' + itens + '</ul>' +
+          '<p style="margin-top:14px"><a href="{{ url_for('publico.calculadora') }}?maquina=' + m.id + '">Simular custos →</a></p>' +
+        '</div>';
+    });
+  </script>
+{% endblock %}
