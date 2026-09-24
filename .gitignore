@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 database/*.db
 database/*.sqlite
+database/
