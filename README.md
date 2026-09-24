@@ -205,5 +205,5 @@ Para o desenvolvimento do incremento da Sprint, as atividades serão divididas e
 ## Autores
 
 Projeto desenvolvido por:
-#Edvan Henrique Silva Viegas
-#Hiago Rafael Fernandes do Amaral
+* Edvan Henrique Silva Viegas
+* Hiago Rafael Fernandes do Amaral
