@@ -1,0 +1,92 @@
+{% extends 'painel.html' %}
+{% block titulo %}Atividades{% endblock %}
+
+{% macro linha_atividade(a, pendente) %}
+  {% set atrasada = pendente and not a.recorrente and a.data_prevista and a.data_prevista < hoje %}
+  <div class="item-atividade">
+    <div>
+      <strong>{{ a.titulo }}</strong>
+      {% if a.tipo == 'manutencao' %}<span class="badge vermelho">Manutenção</span>{% else %}<span class="badge verde">Operação</span>{% endif %}
+      {% if a.recorrente %}<span class="badge cinza">Todo dia</span>{% endif %}
+      {% if atrasada %}<span class="badge amarelo">Atrasada</span>{% endif %}
+      {% if a.descricao %}<p class="suave">{{ a.descricao|nl2br }}</p>{% endif %}
+      <small class="suave">
+        👤 {{ a.funcionario or 'Qualquer funcionário' }}
+        {% if a.maquina %} · 🚜 {{ a.maquina }}{% endif %}
+        {% if a.data_prevista %} · 📅 {{ 'a partir de ' if a.recorrente }}{{ a.data_prevista|data_br }}{% endif %}
+        {% if a.ultima_execucao %} · última execução {{ a.ultima_execucao|data_br }}{% endif %}
+      </small>
+    </div>
+    <div class="acoes">
+      {% for valor, rotulo in ([('concluida', 'Concluir'), ('arquivada', 'Arquivar')] if pendente else [('pendente', 'Reabrir')]) %}
+        <form method="post">{{ csrf_campo() }}
+          <input type="hidden" name="acao" value="status"><input type="hidden" name="id" value="{{ a.id }}">
+          <input type="hidden" name="valor" value="{{ valor }}">
+          <button class="botao pequeno contorno">{{ rotulo }}</button>
+        </form>
+      {% endfor %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% block conteudo %}
+<h1 class="titulo-app">Atividades</h1>
+
+<div class="duas-colunas">
+  <div>
+    <div class="card">
+      <h2>A fazer ({{ pendentes|length }})</h2>
+      {% if not pendentes %}<p class="vazio">Nenhuma atividade pendente.</p>{% endif %}
+      {% for a in pendentes %}{{ linha_atividade(a, true) }}{% endfor %}
+    </div>
+    <div class="card">
+      <h2>Concluídas recentemente</h2>
+      {% if not concluidas %}<p class="vazio">Nada concluído ainda.</p>{% endif %}
+      {% for a in concluidas %}{{ linha_atividade(a, false) }}{% endfor %}
+    </div>
+  </div>
+
+  <form method="post" class="card formulario">
+    {{ csrf_campo() }}
+    <input type="hidden" name="acao" value="criar">
+    <h2>Nova atividade</h2>
+    <div class="campo">
+      <label for="titulo">Título *</label>
+      <input id="titulo" name="titulo" required placeholder="Ex.: Roçar talhão 3">
+    </div>
+    <div class="campo">
+      <label for="descricao">Instruções</label>
+      <textarea id="descricao" name="descricao" rows="3"></textarea>
+    </div>
+    <div class="form-grade">
+      <div class="campo">
+        <label for="tipo">Tipo</label>
+        <select id="tipo" name="tipo">
+          <option value="operacao">Operação (trabalho de campo)</option>
+          <option value="manutencao">Manutenção de máquina</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="data_prevista">Data prevista</label>
+        <input type="date" id="data_prevista" name="data_prevista" value="{{ hoje }}">
+      </div>
+      <div class="campo">
+        <label for="maquina_id">Máquina usada</label>
+        <select id="maquina_id" name="maquina_id">
+          <option value="">Nenhuma</option>
+          {% for m in maquinas %}<option value="{{ m.id }}">{{ m.nome }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="campo">
+        <label for="funcionario_id">Responsável</label>
+        <select id="funcionario_id" name="funcionario_id">
+          <option value="">Qualquer funcionário</option>
+          {% for f in funcionarios %}<option value="{{ f.id }}">{{ f.nome }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <label class="checkbox"><input type="checkbox" name="recorrente"> Repetir todos os dias (ex.: checklist diário)</label>
+    <button class="botao">Criar atividade</button>
+  </form>
+</div>
+{% endblock %}

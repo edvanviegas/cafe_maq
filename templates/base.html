@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% block meta %}{% endblock %}
+  <title>{% block titulo %}CafeMaq{% endblock %} - CafeMaq</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  {% set menu = [
+    ('publico.index', 'Início'),
+    ('publico.maquinas', 'Máquinas'),
+    ('publico.calculadora', 'Calculadora'),
+    ('publico.manutencao', 'Manutenção'),
+    ('publico.sobre', 'Sobre'),
+  ] %}
+  <header>
+    <nav class="container nav">
+      <a href="{{ url_for('publico.index') }}" class="logo"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt=""> CafeMaq</a>
+      <button class="menu-botao" aria-label="Abrir menu">☰</button>
+      <ul class="menu">
+        {% for endpoint, nome in menu %}
+          <li><a href="{{ url_for(endpoint) }}" class="{{ 'ativo' if request.endpoint == endpoint }}">{{ nome }}</a></li>
+        {% endfor %}
+        {% if usuario %}
+          {% set no_painel = request.blueprint in ('dono', 'funcionario') %}
+          <li><a href="{{ url_for('dono.index' if usuario.tipo == 'dono' else 'funcionario.index') }}" class="{{ 'ativo' if no_painel }}">Painel</a></li>
+          <li><a href="{{ url_for('auth.sair') }}">Sair ({{ usuario.nome|primeiro_nome }})</a></li>
+        {% else %}
+          <li><a href="{{ url_for('auth.entrar') }}" class="{{ 'ativo' if request.blueprint == 'auth' }}">Entrar</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  {% block topo_painel %}{% endblock %}
+
+  {% block principal %}
+    <main class="container conteudo-app">
+      {% include 'mensagens.html' %}
+      {% block conteudo %}{% endblock %}
+    </main>
+  {% endblock %}
+
+  <footer>
+    <div class="container">
+      <p>© {{ ano_atual }} CafeMaq · Desenvolvido por <strong>Hiago Amaral</strong> e <strong>Edvan Henrique</strong></p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

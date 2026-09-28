@@ -1,0 +1,48 @@
+{% extends 'painel.html' %}
+{% block titulo %}Painel{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Visão geral</h1>
+<p class="suave subtitulo-app">{{ fazenda.nome }} · {{ hoje|data_br }}</p>
+
+{% if falta_passo %}
+  <div class="card borda-verde">
+    <h2>Primeiros passos</h2>
+    <ol class="passos">
+      {% for texto, feito, link in primeiros_passos %}
+        <li class="{{ 'feito' if feito }}">{{ '✔' if feito else '○' }} <a href="{{ link }}">{{ texto }}</a></li>
+      {% endfor %}
+    </ol>
+  </div>
+{% endif %}
+
+<div class="kpis">
+  <div class="kpi"><span>Trabalhando agora</span><strong>{{ trabalhando|length }}<small> / {{ total_func }}</small></strong></div>
+  <div class="kpi"><span>Relatórios hoje</span><strong>{{ relatorios_hoje }}</strong></div>
+  <a class="kpi" href="{{ url_for('dono.atividades') }}"><span>Atividades pendentes</span><strong>{{ pendentes }}</strong></a>
+  <a class="kpi {{ 'alerta-kpi' if problemas }}" href="{{ url_for('dono.manutencao') }}"><span>Problemas em máquinas</span><strong>{{ problemas }}</strong></a>
+  <a class="kpi" href="{{ url_for('dono.manutencao') }}"><span>Manutenção no mês</span><strong class="menor">{{ gasto_mes|reais }}</strong></a>
+</div>
+
+<div class="duas-colunas iguais">
+  <div class="card">
+    <h2>Em serviço agora</h2>
+    {% if not trabalhando %}<p class="vazio">Ninguém com ponto aberto no momento.</p>{% endif %}
+    <ul class="lista-simples">
+      {% for t in trabalhando %}
+        <li>🟢 <strong>{{ t.nome }}</strong> <span class="suave">{{ t.funcao or '' }} · desde {{ t.entrada|hora_br }} ({{ t.horas|horas_br }})</span></li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Últimos relatórios</h2>
+    {% if not ultimos %}<p class="vazio">Nenhum relatório recebido ainda.</p>{% endif %}
+    <ul class="lista-simples">
+      {% for r in ultimos %}
+        <li><strong>{{ r.nome }}</strong> <span class="suave">· {{ r.data|data_br }} às {{ r.criado_em|hora_br }} · {{ r.feitas or 0 }}/{{ r.total }} atividades feitas</span></li>
+      {% endfor %}
+    </ul>
+    <p><a href="{{ url_for('dono.relatorios') }}">Ver todos os relatórios →</a></p>
+  </div>
+</div>
+{% endblock %}

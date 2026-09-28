@@ -1,209 +1,75 @@
-# cafe_maq
+# CafeMaq
 
-# Sistema de Gerenciamento de Maquinário para Fazendas de Café
+Site sobre custos de manutenção de maquinário em fazendas de café, com sistema de gestão
+para donos de lavoura e funcionários.
 
-## Sobre o Projeto
+Desenvolvido por **Hiago Amaral** e **Edvan Henrique**.
 
-Este projeto consiste no desenvolvimento de um sistema web voltado para proprietários de fazendas produtoras de café.
+## Estrutura
 
-O sistema tem como objetivo auxiliar no gerenciamento das máquinas utilizadas na propriedade, no controle de manutenções, no acompanhamento das atividades realizadas pelos funcionários e no registro dos custos relacionados ao maquinário.
+Feito em **Python + Flask**, com banco **SQLite**.
 
-A proposta é centralizar essas informações em um único sistema, facilitando o acompanhamento da rotina da fazenda e permitindo que o proprietário tenha uma visão mais organizada sobre o funcionamento das máquinas e o trabalho realizado pelos funcionários.
+| Pasta / arquivo | Conteúdo |
+|---|---|
+| `app.py` | Cria o app Flask e registra as rotas (é o arquivo que se executa) |
+| `config.py` | Configurações: chave secreta, caminho do banco, login com Google |
+| `banco.py` | Conexão com o SQLite e funções de consulta (`um`, `todos`, `valor`, `inserir`) |
+| `utils.py` | Datas, formatação, proteção CSRF, login e situação da revisão das máquinas |
+| `catalogo.py` | Catálogo de tipos, marcas e modelos de máquinas (usado pela API) |
+| `rotas/` | Rotas separadas por área: `publico`, `auth`, `dono`, `funcionario`, `api` |
+| `templates/` | Páginas HTML (Jinja2) |
+| `static/` | CSS, JavaScript e imagens |
+| `database/schema.sql` | Estrutura do banco (criado sozinho na primeira execução) |
 
-## Objetivo
+## Rodar no computador
 
-Desenvolver uma plataforma que permita ao proprietário da fazenda administrar seus funcionários, máquinas, atividades e manutenções, utilizando os registros realizados pelos funcionários para acompanhar o trabalho diário e identificar possíveis necessidades de manutenção.
+Precisa do Python 3.10 ou mais novo. Na pasta do projeto:
 
-O sistema também terá como objetivo auxiliar no acompanhamento dos custos de manutenção do maquinário.
+```
+pip install -r requirements.txt
+python app.py
+```
 
-## Tipos de Usuário
+Abra http://localhost:5000. O banco é criado sozinho em `database/cafemaq.db`.
 
-O sistema terá dois tipos principais de usuários:
+## API de máquinas
 
-### Dono da Fazenda
+Usada no cadastro de máquinas: ao escolher o tipo, o formulário sugere marcas, modelos, intervalo
+de revisão e valor de referência; a busca (ex.: "arbus", "K3") preenche tipo, marca e modelo de uma vez.
 
-O proprietário terá acesso às funções administrativas do sistema, podendo:
+| Rota | Retorna |
+|---|---|
+| `GET /api/catalogo` | Todos os tipos de máquina com dados de referência |
+| `GET /api/catalogo/<tipo>` | Um tipo com marcas, modelos e checklist preventivo |
+| `GET /api/catalogo/busca?q=texto` | Modelos que combinam com o texto |
+| `GET /api/maquinas` | Máquinas cadastradas na fazenda (dono logado) |
+| `GET /api/maquinas/<id>` | Uma máquina com situação da revisão e histórico de manutenções |
 
-* Cadastrar sua fazenda;
-* Cadastrar e vincular funcionários;
-* Cadastrar máquinas e equipamentos;
-* Criar atividades para os funcionários;
-* Definir atividades que devem ser realizadas;
-* Acompanhar os relatórios enviados pelos funcionários;
-* Consultar o histórico das atividades;
-* Registrar e acompanhar manutenções;
-* Acompanhar os custos de manutenção;
-* Visualizar um resumo do desempenho das atividades.
+Para acrescentar marcas e modelos, edite `MODELOS` em `catalogo.py`.
 
-### Funcionário
+## Publicar
 
-O funcionário terá acesso às funções relacionadas às atividades atribuídas pelo proprietário.
+Hospedagem compartilhada comum de PHP (como a HostGator básica) não roda Flask. Opções simples com
+plano gratuito: **PythonAnywhere** ou **Render**. Em produção, defina a variável de ambiente
+`CAFEMAQ_SECRET` com um texto aleatório longo e rode com um servidor WSGI (ex.: `gunicorn app:app`).
 
-Ele poderá:
+## Login com Google
 
-* Acessar a fazenda à qual foi vinculado;
-* Visualizar as atividades atribuídas;
-* Registrar o início e o término das atividades;
-* Utilizar o sistema como uma forma de registro de ponto;
-* Informar quais atividades foram realizadas;
-* Preencher o relatório diário;
-* Registrar problemas encontrados nas máquinas;
-* Adicionar observações sobre o trabalho realizado.
+1. Acesse https://console.cloud.google.com → crie um projeto.
+2. *APIs e serviços → Tela de permissão OAuth*: configure como **Externo** e preencha nome e e-mail.
+3. *Credenciais → Criar credenciais → ID do cliente OAuth → Aplicativo da Web*.
+4. Em **Origens JavaScript autorizadas** adicione `http://localhost:5000` e `https://seudominio.com.br`.
+5. Copie o **ID do cliente** para `GOOGLE_CLIENT_ID` em `config.py` (ou na variável de ambiente de mesmo nome).
 
-## Principais Funcionalidades
+## Como funciona
 
-### Cadastro da Fazenda
-
-O proprietário poderá cadastrar as informações de sua fazenda e utilizar o sistema para administrar os dados relacionados à propriedade.
-
-### Cadastro de Funcionários
-
-O proprietário poderá cadastrar funcionários e vinculá-los à sua fazenda.
-
-Após o vínculo, o funcionário poderá acessar as atividades destinadas a ele.
-
-### Cadastro de Máquinas
-
-O proprietário poderá registrar as máquinas utilizadas na fazenda, armazenando informações importantes para o acompanhamento do equipamento.
-
-Entre as informações poderão estar:
-
-* Nome da máquina;
-* Tipo;
-* Modelo;
-* Marca;
-* Ano;
-* Identificação;
-* Estado atual;
-* Histórico de manutenção.
-
-### Controle de Atividades
-
-O proprietário poderá criar atividades que deverão ser realizadas pelos funcionários.
-
-Os funcionários poderão visualizar as atividades atribuídas e registrar quando elas forem realizadas.
-
-### Registro de Ponto e Atividades
-
-O sistema permitirá registrar o horário de início e término das atividades.
-
-Dessa forma, os registros poderão funcionar como uma forma de controle da jornada e das atividades realizadas durante o trabalho.
-
-### Relatório Diário
-
-Ao final das atividades, o funcionário poderá preencher um relatório informando o que foi realizado durante o dia.
-
-O relatório poderá conter:
-
-* Atividades realizadas;
-* Horário de início;
-* Horário de término;
-* Máquina utilizada;
-* Problemas identificados;
-* Observações;
-* Situação da atividade.
-
-### Controle de Manutenção
-
-O proprietário poderá registrar e acompanhar as manutenções realizadas nas máquinas.
-
-O sistema poderá armazenar informações como:
-
-* Máquina;
-* Tipo de manutenção;
-* Data;
-* Descrição do serviço;
-* Peças utilizadas;
-* Responsável;
-* Valor gasto;
-* Próxima manutenção prevista.
-
-### Controle de Custos
-
-Os dados das manutenções serão utilizados para acompanhar os custos relacionados ao maquinário.
-
-O proprietário poderá consultar informações como:
-
-* Valor gasto por manutenção;
-* Custo por máquina;
-* Quantidade de manutenções;
-* Histórico de gastos;
-* Custo total em determinado período.
-
-### Resumo de Desempenho
-
-O proprietário terá acesso a uma área de resumo com informações sobre o funcionamento da propriedade.
-
-Entre os dados apresentados poderão estar:
-
-* Total de atividades;
-* Atividades concluídas;
-* Atividades pendentes;
-* Horas registradas;
-* Relatórios enviados;
-* Máquinas em manutenção;
-* Manutenções realizadas;
-* Custos de manutenção.
-
-## Banco de Dados
-
-O sistema utilizará um banco de dados para armazenar as informações de forma organizada e permitir que os dados sejam consultados posteriormente.
-
-Entre as principais informações armazenadas estarão:
-
-* Usuários;
-* Fazendas;
-* Funcionários;
-* Máquinas;
-* Atividades;
-* Registros de ponto;
-* Relatórios;
-* Manutenções;
-* Custos.
-
-Os registros ficarão relacionados entre si. Dessa forma, será possível identificar, por exemplo, qual funcionário realizou determinada atividade, em qual fazenda, utilizando qual máquina e em qual período.
-
-## Tecnologias
-
-O projeto será desenvolvido utilizando tecnologias para desenvolvimento web.
-
-Tecnologias previstas:
-
-* HTML;
-* CSS;
-* JavaScript;
-* [Framework utilizado];
-* MySQL
-* Git;
-* GitHub;
-* Visual Studio Code.
-
-Após o desenvolvimento e os testes, o sistema será preparado para hospedagem na HostGator.
-
-## Estrutura da Sprint
-
-Para o desenvolvimento do incremento da Sprint, as atividades serão divididas em tarefas menores e acompanhadas por meio de um quadro Kanban.
-
-### A Fazer
-
-* [ ] Criar sistema de login;
-* [ ] Criar diferenciação entre dono e funcionário;
-* [ ] Criar cadastro da fazenda;
-* [ ] Criar cadastro de funcionários;
-* [ ] Criar cadastro de máquinas;
-* [ ] Criar cadastro de atividades;
-* [ ] Criar formulário do funcionário;
-* [ ] Criar registro de ponto;
-* [ ] Criar relatório diário;
-* [ ] Criar armazenamento dos dados no banco;
-* [ ] Criar visualização dos relatórios;
-* [ ] Criar resumo de desempenho;
-* [ ] Criar controle de manutenção;
-* [ ] Criar controle de custos;
-* [ ] Realizar testes.
-
-## Autores
-
-Projeto desenvolvido por:
-* Edvan Henrique Silva Viegas
-* Hiago Rafael Fernandes do Amaral
+1. O **dono** cria a conta, cadastra a fazenda, as máquinas e os funcionários (pelo e-mail).
+2. O **funcionário** cria a conta (ou entra com Google) usando o mesmo e-mail e é vinculado automaticamente.
+3. O dono cria **atividades** (únicas ou diárias), que podem ter responsável e máquina.
+4. O funcionário **bate o ponto** e, no fim do dia, envia o **relatório**: o que foi feito, horas,
+   horímetro e problemas nas máquinas. O envio pode registrar a saída automaticamente.
+5. Problemas relatados viram **alertas** na aba **Manutenção**. Lá o dono escolhe uma das máquinas
+   cadastradas, vê a situação da revisão pelo horímetro, marca o checklist preventivo, registra o
+   serviço e o custo, e pode agendar a manutenção para um funcionário.
+6. A aba **Desempenho** resume horas, atividades, taxa de conclusão, relatórios, problemas e custos
+   por dia, semana ou mês.

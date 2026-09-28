@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block titulo %}Sobre{% endblock %}
+
+{% block principal %}
+<main>
+    <div class="titulo-pagina">
+      <div class="container">
+        <h1>Sobre o projeto</h1>
+        <p>Metodologia e informações do Trabalho de Conclusão de Curso.</p>
+      </div>
+    </div>
+
+    <section>
+      <div class="container">
+        <h2>O projeto</h2>
+        <p>O CafeMaq foi desenvolvido como Trabalho de Conclusão de Curso em Tecnologia da Informação.
+           O objetivo é oferecer ao produtor de café uma ferramenta simples e gratuita para estimar
+           o custo de manutenção do seu maquinário e incentivar a manutenção preventiva.</p>
+
+        <h2 style="margin-top:40px">Metodologia de cálculo</h2>
+        <p>O custo de reparos segue o modelo da norma <strong>ASABE D497</strong>
+           (American Society of Agricultural and Biological Engineers), bastante usado em estudos de
+           custos de máquinas agrícolas. O custo de reparo acumulado é dado por:</p>
+
+        <div class="destaque" style="font-family: Consolas, monospace; font-size: 1.05rem;">
+          CRA = RF1 × P × (h / 1000)<sup>RF2</sup>
+        </div>
+
+        <p>Onde <strong>P</strong> é o preço da máquina nova, <strong>h</strong> as horas acumuladas
+           de uso e <strong>RF1</strong>/<strong>RF2</strong> os fatores de reparo de cada tipo de máquina.
+           O custo de um ano é a diferença entre o acumulado no fim e no começo do ano — por isso
+           máquinas mais velhas gastam mais.</p>
+        <p>O combustível é calculado por consumo (L/h) × preço × horas, e os lubrificantes são
+           estimados em 15% do gasto com combustível, também conforme a ASABE.</p>
+
+        <div class="aviso">
+          ⚠️ Os valores de preço e consumo são estimativas de referência e devem ser atualizados com
+          cotações de revendas e dados da sua região. Os fatores ASABE foram desenvolvidos para
+          máquinas em geral; colhedoras de café usam fatores de máquinas semelhantes.
+        </div>
+
+        <h2 style="margin-top:40px">Referências</h2>
+        <ul style="margin-left:20px">
+          <li>ASABE D497 — Agricultural Machinery Management Data.</li>
+          <li>CONAB — Custos de produção agrícola: café.</li>
+          <li>EMBRAPA Café — publicações sobre mecanização da cafeicultura.</li>
+        </ul>
+
+        <h2 style="margin-top:40px">Sistema de gestão</h2>
+        <p>Além das estimativas, o CafeMaq tem uma área restrita onde o <strong>dono da fazenda</strong> cadastra
+           funcionários, máquinas e atividades, e acompanha o desempenho da equipe. O <strong>funcionário</strong>
+           bate o ponto e envia o relatório diário, que registra as horas de uso das máquinas e os problemas
+           encontrados. Tudo é salvo em banco de dados SQLite.</p>
+
+        <h2 style="margin-top:40px">Autores</h2>
+        <p><strong>Hiago Amaral</strong> e <strong>Edvan Henrique</strong> — Curso de [nome do curso], [nome da instituição], 2026.<br>
+           Orientador(a): [nome do orientador].</p>
+      </div>
+    </section>
+  </main>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'painel.html' %}
+{% block titulo %}Desempenho{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Resumo de desempenho</h1>
+
+<div class="barra-periodo card">
+  <div class="seletor">
+    {% for chave, nome in [('dia', 'Diário'), ('semana', 'Semanal'), ('mes', 'Mensal')] %}
+      <a href="{{ url_for('dono.desempenho', p=chave, d=ref) }}" class="{{ 'ativo' if periodo == chave }}">{{ nome }}</a>
+    {% endfor %}
+  </div>
+  <div class="navegacao">
+    <a href="{{ url_for('dono.desempenho', p=periodo, d=anterior) }}" class="botao pequeno contorno" aria-label="Período anterior">‹</a>
+    <strong>{{ rotulo }}</strong>
+    <a href="{{ url_for('dono.desempenho', p=periodo, d=proximo) }}" class="botao pequeno contorno" aria-label="Próximo período">›</a>
+    {% if ref != hoje %}<a href="{{ url_for('dono.desempenho', p=periodo, d=hoje) }}" class="botao pequeno">Hoje</a>{% endif %}
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><span>Horas trabalhadas</span><strong>{{ tot.horas|horas_br }}</strong></div>
+  <div class="kpi"><span>Atividades feitas</span><strong>{{ tot.feita }}<small> + {{ tot.parcial }} parciais</small></strong></div>
+  <div class="kpi"><span>Taxa de conclusão</span><strong>{{ '—' if taxa is none else taxa|num_br(0) ~ '%' }}</strong></div>
+  <div class="kpi"><span>Relatórios entregues</span><strong>{{ tot.relatorios }}<small> / {{ tot.dias_trab }} dias trab.</small></strong></div>
+  <div class="kpi {{ 'alerta-kpi' if ocorrencias }}"><span>Problemas relatados</span><strong>{{ ocorrencias|length }}</strong></div>
+  <div class="kpi"><span>Custo de manutenção</span><strong class="menor">{{ manut.custo|reais }}</strong><small>{{ manut.qtd }} serviço(s), {{ manut.preventivas }} preventiva(s)</small></div>
+</div>
+
+<div class="card">
+  <h2>{{ 'Horas trabalhadas por funcionário' if periodo == 'dia' else 'Horas trabalhadas por dia (equipe)' }}</h2>
+  {% if tot.horas <= 0 %}
+    <p class="vazio">Nenhuma marcação de ponto neste período.</p>
+  {% else %}
+    <div class="grafico-colunas {{ 'denso' if grafico|length > 20 }}">
+      {% for nome, horas in grafico %}
+        <div class="coluna" title="{{ nome }}: {{ horas|horas_br }}">
+          <span class="valor">{{ horas|num_br(1) if horas > 0 else '' }}</span>
+          <div class="barra-vertical" style="height: {{ (horas / max_grafico * 100)|round|int }}%"></div>
+          <span class="rotulo">{{ nome }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Desempenho por funcionário</h2>
+  {% if not por_func %}
+    <p class="vazio">Nenhum funcionário cadastrado.</p>
+  {% else %}
+    <div class="tabela-wrap">
+      <table>
+        <thead>
+          <tr><th>Funcionário</th><th>Horas (ponto)</th><th></th><th>Dias</th><th>Relatórios</th><th>Feitas</th><th>Parciais</th><th>Não feitas</th><th>Conclusão</th><th>Problemas</th></tr>
+        </thead>
+        <tbody>
+        {% for f in por_func %}
+          <tr>
+            <td><strong>{{ f.nome }}</strong><br><small class="suave">{{ f.funcao or '' }}</small></td>
+            <td>{{ f.horas|horas_br }}</td>
+            <td style="min-width:120px"><div class="barra" style="width: {{ (f.horas / max_horas_func * 100)|round|int }}%"></div></td>
+            <td>{{ f.dias|length }}</td>
+            <td>{{ f.relatorios|length }}{% if f.sem_relatorio > 0 %} <span class="badge amarelo" title="Dias com ponto e sem relatório">{{ f.sem_relatorio }} pendente(s)</span>{% endif %}</td>
+            <td>{{ f.feita }}</td>
+            <td>{{ f.parcial }}</td>
+            <td>{{ f.nao_feita }}</td>
+            <td>{% if f.conclusao is none %}—{% else %}
+              <span class="badge {{ 'verde' if f.conclusao >= 80 else ('amarelo' if f.conclusao >= 50 else 'vermelho') }}">{{ f.conclusao|num_br(0) }}%</span>{% endif %}</td>
+            <td>{{ f.problemas or '—' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Uso das máquinas</h2>
+  {% if not uso_maquinas %}
+    <p class="vazio">Nenhuma máquina informada nos relatórios deste período.</p>
+  {% else %}
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr><th>Máquina</th><th>Horas relatadas</th><th>Relatórios</th></tr></thead>
+        <tbody>
+        {% for m in uso_maquinas %}
+          <tr><td>{{ m.nome }}</td><td>{{ m.horas|horas_br }}</td><td>{{ m.dias }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

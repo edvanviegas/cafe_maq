@@ -1,0 +1,233 @@
+{% extends 'painel.html' %}
+{% from 'dono/_macros.html' import badge_revisao, badge_gravidade, descricao_maquina, tabela_manutencoes %}
+{% block titulo %}Manutenção{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Manutenção</h1>
+<p class="suave subtitulo-app">Revisões, consertos e custos das máquinas cadastradas na fazenda.</p>
+
+<div class="kpis">
+  <div class="kpi {{ 'alerta-kpi' if vencidas }}"><span>Revisões vencidas</span><strong>{{ vencidas }}</strong></div>
+  <div class="kpi"><span>Revisões próximas</span><strong>{{ proximas }}</strong></div>
+  <div class="kpi {{ 'alerta-kpi' if ocorrencias }}"><span>Problemas abertos</span><strong>{{ ocorrencias|length }}</strong></div>
+  <div class="kpi"><span>Gasto no mês</span><strong class="menor">{{ gasto_mes|reais }}</strong></div>
+</div>
+
+{% if ocorrencias %}
+  <div class="card borda-vermelha">
+    <h2>⚠ Problemas relatados pelos funcionários</h2>
+    {% for o in ocorrencias %}
+      <div class="ocorrencia">
+        <div>
+          {{ badge_gravidade(o.gravidade) }}
+          <strong>{{ o.maquina }}</strong>
+          <p>{{ o.descricao|nl2br }}</p>
+          <small class="suave">Relatado por {{ o.funcionario or '—' }} em {{ o.criado_em|data_br }} às {{ o.criado_em|hora_br }}</small>
+        </div>
+        <div class="acoes">
+          <a href="{{ url_for('dono.manutencao', ocorrencia=o.id) }}#form-manutencao" class="botao pequeno">Registrar conserto</a>
+          <form method="post">{{ csrf_campo() }}
+            <input type="hidden" name="acao" value="resolver"><input type="hidden" name="id" value="{{ o.id }}">
+            <input type="hidden" name="maquina_id" value="{{ o.maquina_id }}">
+            <button class="botao pequeno contorno">Marcar resolvido</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if not maquinas %}
+  <div class="card vazio-grande">
+    <h2>Nenhuma máquina cadastrada</h2>
+    <p>A manutenção é feita sobre as máquinas da fazenda. Cadastre a primeira para começar.</p>
+    <a href="{{ url_for('dono.maquinas') }}#form-maquina" class="botao">Cadastrar máquina</a>
+  </div>
+{% else %}
+
+<div class="card">
+  <h2>Escolha a máquina</h2>
+  <div class="grade-maquinas">
+    {% for m in maquinas %}
+      <a href="{{ url_for('dono.manutencao', maquina=m.id) }}" class="card-maquina {{ 'selecionada' if sel and sel.id == m.id }} {{ 'alerta' if m.revisao.estado == 'vencida' or m.abertas }}">
+        <span class="icone-maquina">{{ TIPOS.get(m.tipo, TIPOS.outra).icone }}</span>
+        <span>
+          <strong>{{ m.nome }}</strong>
+          <small class="suave">{{ descricao_maquina(m) }}</small>
+          <small>{{ m.horimetro|num_br }} h · {{ 'última em ' ~ (m.ultima_manutencao|data_br) if m.ultima_manutencao else 'sem manutenção registrada' }}</small>
+          <span class="badges">
+            {{ badge_revisao(m.revisao) }}
+            {% if m.abertas %}<span class="badge vermelho">{{ m.abertas }} problema(s)</span>{% endif %}
+          </span>
+        </span>
+      </a>
+    {% endfor %}
+  </div>
+  {% if sel %}<p><a href="{{ url_for('dono.manutencao') }}">← Ver todas as máquinas</a></p>{% endif %}
+</div>
+
+<div class="duas-colunas iguais">
+  <form method="post" class="card formulario" id="form-manutencao">
+    {{ csrf_campo() }}
+    <input type="hidden" name="acao" value="registrar">
+    <input type="hidden" name="ocorrencia_id" value="{{ ocorrencia_sel.id if ocorrencia_sel }}">
+    <input type="hidden" name="atividade_id" value="{{ atividade_sel.id if atividade_sel }}">
+    <h2>Registrar manutenção</h2>
+    {% if ocorrencia_sel %}
+      <div class="alerta info">Resolvendo o problema: “{{ ocorrencia_sel.descricao }}”</div>
+    {% endif %}
+    {% if atividade_sel %}
+      <div class="alerta info">Serviço agendado: “{{ atividade_sel.titulo }}”. Ao registrar, a atividade é concluída.</div>
+    {% endif %}
+
+    <div class="campo">
+      <label for="maquina_id">Máquina *</label>
+      <select id="maquina_id" name="maquina_id" required data-url="{{ url_for('dono.manutencao') }}">
+        <option value="">Selecione…</option>
+        {% for m in maquinas %}
+          <option value="{{ m.id }}" {{ 'selected' if sel and sel.id == m.id }}>{{ m.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-grade">
+      <div class="campo">
+        <label for="tipo_m">Tipo</label>
+        <select id="tipo_m" name="tipo">
+          <option value="preventiva">Preventiva (revisão)</option>
+          <option value="corretiva" {{ 'selected' if ocorrencia_sel }}>Corretiva (conserto)</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="data">Data</label>
+        <input type="date" id="data" name="data" value="{{ hoje }}">
+      </div>
+      <div class="campo">
+        <label for="custo">Custo (R$)</label>
+        <input type="number" step="0.01" min="0" id="custo" name="custo" placeholder="0,00">
+      </div>
+      <div class="campo">
+        <label for="horimetro_m">Horímetro</label>
+        <input type="number" step="0.1" min="0" id="horimetro_m" name="horimetro" placeholder="{{ 'Atual: ' ~ sel.horimetro|num_br if sel }}">
+      </div>
+    </div>
+
+    {% if sel %}
+      <div class="campo">
+        <label>Checklist preventivo — {{ sel.tipo_nome }}</label>
+        <div class="checklist">
+          {% for item in TIPOS.get(sel.tipo, TIPOS.outra).itens_preventivos %}
+            <label class="checkbox"><input type="checkbox" value="{{ item }}"> {{ item }}</label>
+          {% endfor %}
+        </div>
+        <small>Os itens marcados entram no campo “Serviço realizado”.</small>
+      </div>
+    {% endif %}
+
+    <div class="campo">
+      <label for="descricao">Serviço realizado *</label>
+      <textarea id="descricao" name="descricao" rows="4" required placeholder="Ex.: troca de óleo e filtros">{{ atividade_sel.titulo if atividade_sel }}</textarea>
+    </div>
+    <button class="botao">Registrar</button>
+  </form>
+
+  <div>
+    {% if sel %}
+      {% set gasto_total = historico|sum(attribute='custo') %}
+      <div class="card">
+        <h2>{{ TIPOS.get(sel.tipo, TIPOS.outra).icone }} {{ sel.nome }}</h2>
+        <p class="suave">{{ descricao_maquina(sel) }}</p>
+        <div class="dados-maquina">
+          <div><span>Horímetro</span><strong>{{ sel.horimetro|num_br }} h</strong></div>
+          <div><span>Revisão a cada</span><strong>{{ sel.revisao.intervalo|num_br(0) }} h</strong></div>
+          <div><span>Situação</span><strong>{{ badge_revisao(sel.revisao) }}</strong></div>
+          <div><span>Gasto (12 meses)</span><strong>{{ sel.gasto_ano|reais }}</strong></div>
+          <div><span>Gasto total registrado</span><strong>{{ gasto_total|reais }} ({{ historico|length }} serviço(s))</strong></div>
+        </div>
+        <p style="margin-top:12px"><a href="{{ url_for('dono.maquinas', editar=sel.id) }}#form-maquina">Editar cadastro da máquina →</a></p>
+      </div>
+    {% endif %}
+
+    <form method="post" class="card formulario">
+      {{ csrf_campo() }}
+      <input type="hidden" name="acao" value="agendar">
+      <h2>Agendar para um funcionário</h2>
+      <p class="suave pequeno-texto">Vira uma atividade de manutenção no relatório do dia do funcionário.</p>
+      {% if sel %}
+        <input type="hidden" name="maquina_id" value="{{ sel.id }}">
+      {% else %}
+        <div class="campo">
+          <label for="maquina_agenda">Máquina *</label>
+          <select id="maquina_agenda" name="maquina_id" required>
+            <option value="">Selecione…</option>
+            {% for m in maquinas %}<option value="{{ m.id }}">{{ m.nome }}</option>{% endfor %}
+          </select>
+        </div>
+      {% endif %}
+      <div class="campo">
+        <label for="titulo_agenda">O que fazer</label>
+        <input id="titulo_agenda" name="titulo" placeholder="{{ 'Revisão preventiva - ' ~ sel.nome if sel else 'Revisão preventiva' }}">
+      </div>
+      <div class="form-grade">
+        <div class="campo">
+          <label for="data_agenda">Data</label>
+          <input type="date" id="data_agenda" name="data_prevista" value="{{ hoje }}">
+        </div>
+        <div class="campo">
+          <label for="funcionario_agenda">Responsável</label>
+          <select id="funcionario_agenda" name="funcionario_id">
+            <option value="">Qualquer funcionário</option>
+            {% for f in funcionarios %}<option value="{{ f.id }}">{{ f.nome }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <button class="botao contorno">Agendar</button>
+    </form>
+
+    <div class="card">
+      <h2>Manutenções agendadas</h2>
+      {% if not agendadas %}<p class="vazio">Nada agendado{{ ' para esta máquina' if sel }}.</p>{% endif %}
+      <ul class="lista-simples">
+        {% for a in agendadas %}
+          <li>
+            📅 {{ a.data_prevista|data_br }} — <strong>{{ a.titulo }}</strong>
+            <span class="suave">· {{ a.maquina }} · {{ a.funcionario or 'qualquer funcionário' }}</span>
+            {% if a.data_prevista and a.data_prevista < hoje %}<span class="badge amarelo">Atrasada</span>{% endif %}
+            <a href="{{ url_for('dono.manutencao', atividade=a.id) }}#form-manutencao">registrar</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>{{ 'Histórico — ' ~ sel.nome if sel else 'Histórico de manutenções (últimas 30)' }}</h2>
+  {% if not historico %}
+    <p class="vazio">Nenhuma manutenção registrada.</p>
+  {% else %}
+    {{ tabela_manutencoes(historico, mostrar_maquina=not sel) }}
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Trocar a máquina recarrega a página com o histórico e o checklist dela
+  const seletor = document.getElementById("maquina_id");
+  if (seletor) {
+    seletor.addEventListener("change", function () {
+      if (seletor.value) window.location = seletor.dataset.url + "?maquina=" + seletor.value + "#form-manutencao";
+    });
+  }
+
+  // Itens do checklist marcados entram (ou saem) do campo "Serviço realizado"
+  const descricao = document.getElementById("descricao");
+  document.querySelectorAll(".checklist input").forEach(function (caixa) {
+    caixa.addEventListener("change", function () {
+      const linhas = descricao.value.split("\n").filter((l) => l.trim() && l !== "- " + caixa.value);
+      if (caixa.checked) linhas.push("- " + caixa.value);
+      descricao.value = linhas.join("\n");
+    });
+  });
+</script>
+{% endblock %}

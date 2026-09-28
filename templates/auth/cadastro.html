@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block titulo %}Criar conta{% endblock %}
+{% block conteudo %}
+<div class="caixa-login card">
+  <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" class="logo-grande">
+  <h1>Criar conta</h1>
+
+  {% for erro in erros %}
+    <div class="alerta erro">{{ erro }}</div>
+  {% endfor %}
+
+  <form method="post" class="formulario">
+    {{ csrf_campo() }}
+    <div class="campo">
+      <label>Tipo de conta</label>
+      {% include 'auth/escolha_tipo.html' %}
+    </div>
+    <div class="campo">
+      <label for="nome">Nome completo</label>
+      <input id="nome" name="nome" value="{{ dados.nome }}" required>
+    </div>
+    <div class="campo">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" name="email" value="{{ dados.email }}" required>
+      <small>Funcionário: use o mesmo e-mail que o dono cadastrou na fazenda.</small>
+    </div>
+    <div class="form-grade">
+      <div class="campo">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" name="senha" minlength="6" required>
+      </div>
+      <div class="campo">
+        <label for="senha2">Repita a senha</label>
+        <input type="password" id="senha2" name="senha2" minlength="6" required>
+      </div>
+    </div>
+    <button class="botao largo">Criar conta</button>
+  </form>
+
+  {% include 'auth/google_botao.html' %}
+
+  <p class="rodape-login">Já tem conta? <a href="{{ url_for('auth.entrar') }}">Entrar</a></p>
+</div>
+{% endblock %}

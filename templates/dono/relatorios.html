@@ -1,0 +1,72 @@
+{% extends 'painel.html' %}
+{% from 'dono/_macros.html' import badge_gravidade %}
+{% block titulo %}Relatórios{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Relatórios dos funcionários</h1>
+
+<form class="card filtros" method="get">
+  <div class="campo"><label for="de">De</label><input type="date" id="de" name="de" value="{{ de }}"></div>
+  <div class="campo"><label for="ate">Até</label><input type="date" id="ate" name="ate" value="{{ ate }}"></div>
+  <div class="campo">
+    <label for="funcionario">Funcionário</label>
+    <select id="funcionario" name="funcionario">
+      <option value="0">Todos</option>
+      {% for f in funcionarios %}
+        <option value="{{ f.id }}" {{ 'selected' if func_filtro == f.id }}>{{ f.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="botao">Filtrar</button>
+</form>
+
+{% if not relatorios %}
+  <div class="card vazio">Nenhum relatório neste período.</div>
+{% endif %}
+
+{% set situacoes = {
+  'feita': '<span class="badge verde">Feita</span>',
+  'parcial': '<span class="badge amarelo">Parcial</span>',
+  'nao_feita': '<span class="badge vermelho">Não feita</span>',
+} %}
+{% for r in relatorios %}
+  <details class="card relatorio" {{ 'open' if relatorios|length <= 3 }}>
+    <summary>
+      <strong>{{ r.nome }}</strong>
+      <span class="suave">{{ r.data|data_br }} · enviado às {{ r.criado_em|hora_br }} · ponto: {{ r.horas_ponto|horas_br if r.pontos else 'sem marcação' }}</span>
+      {% if r.problemas %}<span class="badge vermelho">{{ r.problemas|length }} problema(s)</span>{% endif %}
+    </summary>
+
+    {% if r.pontos %}
+      <p class="suave">Marcações:
+        {% for p in r.pontos %}{{ p.entrada|hora_br }}–{{ p.saida|hora_br if p.saida else 'aberto' }}{{ ', ' if not loop.last }}{% endfor %}
+      </p>
+    {% endif %}
+
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr><th>Atividade</th><th>Situação</th><th>Horas</th><th>Máquina</th><th>Horímetro</th></tr></thead>
+        <tbody>
+        {% for i in r.itens %}
+          <tr>
+            <td class="quebra">{{ i.atividade_titulo }}{% if not i.atividade_id %} <span class="badge cinza">extra</span>{% endif %}</td>
+            <td>{{ situacoes[i.status]|safe }}</td>
+            <td>{{ i.horas|horas_br }}</td>
+            <td>{{ i.maquina or '—' }}</td>
+            <td>{{ (i.horimetro|num_br ~ ' h') if i.horimetro is not none else '—' }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="suave">Nenhuma atividade informada.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% for o in r.problemas %}
+      <div class="alerta erro">⚠ <strong>{{ o.maquina }}</strong> ({{ badge_gravidade(o.gravidade) }}): {{ o.descricao }}
+        — {% if o.status == 'aberta' %}<a href="{{ url_for('dono.manutencao', ocorrencia=o.id) }}#form-manutencao">registrar conserto</a>{% else %}resolvido{% endif %}</div>
+    {% endfor %}
+
+    {% if r.observacoes %}<p><strong>Observações:</strong> {{ r.observacoes|nl2br }}</p>{% endif %}
+  </details>
+{% endfor %}
+{% endblock %}

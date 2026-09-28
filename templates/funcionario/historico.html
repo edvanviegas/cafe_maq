@@ -1,0 +1,46 @@
+{% extends 'painel.html' %}
+{% block titulo %}Histórico{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Meu histórico</h1>
+<p class="suave subtitulo-app">Últimos 30 dias · {{ dias|length }} dia(s) trabalhados · {{ total_horas|horas_br }} no total</p>
+
+<div class="duas-colunas iguais">
+  <div class="card">
+    <h2>Ponto</h2>
+    {% if not dias %}<p class="vazio">Nenhuma marcação nos últimos 30 dias.</p>{% endif %}
+    <div class="tabela-wrap">
+      <table>
+        {% if dias %}<thead><tr><th>Dia</th><th>Marcações</th><th>Total</th></tr></thead>{% endif %}
+        <tbody>
+        {% for dia, d in dias.items() %}
+          <tr>
+            <td>{{ dia|data_br }}</td>
+            <td>{% for p in d.marcacoes %}{{ p.entrada|hora_br }}–{{ p.saida|hora_br if p.saida else 'aberto' }}{{ ', ' if not loop.last }}{% endfor %}</td>
+            <td><strong>{{ d.horas|horas_br }}</strong></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Relatórios enviados</h2>
+    {% if not relatorios %}<p class="vazio">Nenhum relatório nos últimos 30 dias.</p>{% endif %}
+    <div class="tabela-wrap">
+      <table>
+        {% if relatorios %}<thead><tr><th>Dia</th><th>Atividades feitas</th><th>Horas</th></tr></thead>{% endif %}
+        <tbody>
+        {% for r in relatorios %}
+          <tr>
+            <td>{{ r.data|data_br }}</td>
+            <td>{{ r.feitas or 0 }} de {{ r.total }}</td>
+            <td>{{ r.horas|horas_br }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

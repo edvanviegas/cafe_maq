@@ -1,0 +1,155 @@
+{% extends 'painel.html' %}
+{% block titulo %}Meu dia{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Olá, {{ usuario.nome|primeiro_nome }}!</h1>
+<p class="suave subtitulo-app">{{ vinculo.fazenda_nome }} · {{ vinculo.funcao or 'Funcionário' }} · {{ hoje|data_br }}</p>
+
+<!-- ===== Bater ponto ===== -->
+<div class="card ponto-card {{ 'trabalhando' if aberto }}">
+  <div>
+    <h2>Ponto</h2>
+    {% if aberto %}
+      <p class="ponto-status">🟢 Trabalhando desde <strong>{{ aberto.entrada|hora_br }}</strong></p>
+    {% else %}
+      <p class="ponto-status">⚪ Fora do expediente</p>
+    {% endif %}
+    <p class="suave">Hoje: {{ horas_hoje|horas_br }} trabalhadas
+      {% for p in pontos_hoje %} · {{ p.entrada|hora_br }}–{{ p.saida|hora_br if p.saida else 'agora' }}{% endfor %}
+    </p>
+  </div>
+  <form method="post">
+    {{ csrf_campo() }}
+    {% if aberto %}
+      <input type="hidden" name="acao" value="saida">
+      <button class="botao grande contorno-vermelho">Registrar saída</button>
+    {% else %}
+      <input type="hidden" name="acao" value="entrada">
+      <button class="botao grande verde">Registrar entrada</button>
+    {% endif %}
+  </form>
+</div>
+
+<!-- ===== Relatório do dia ===== -->
+{% if relatorio_hoje %}
+  <div class="card borda-verde">
+    <h2>✅ Relatório de hoje enviado</h2>
+    <p class="suave">Enviado às {{ relatorio_hoje.criado_em|hora_br }}.</p>
+    <ul class="lista-simples">
+      {% for i in itens_hoje %}
+        <li>{{ {'feita': '✔', 'parcial': '◐', 'nao_feita': '✖'}[i.status] }} {{ i.atividade_titulo }}
+          {% if i.horas > 0 %}<span class="suave">({{ i.horas|horas_br }})</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% if relatorio_hoje.observacoes %}<p><strong>Observações:</strong> {{ relatorio_hoje.observacoes|nl2br }}</p>{% endif %}
+  </div>
+{% else %}
+  <form method="post" class="card formulario">
+    {{ csrf_campo() }}
+    <input type="hidden" name="acao" value="relatorio">
+    <h2>Relatório do dia</h2>
+    <p class="suave">Marque o que foi feito em cada atividade passada pelo dono.</p>
+
+    {% if not atividades %}
+      <p class="vazio">Nenhuma atividade para hoje. Se fez algo, descreva em “Outra atividade”.</p>
+    {% endif %}
+
+    {% for a in atividades %}
+      <fieldset class="atividade-form">
+        <legend>
+          {{ a.titulo }}
+          {% if a.tipo == 'manutencao' %}<span class="badge vermelho">Manutenção</span>{% endif %}
+          {% if a.recorrente %}<span class="badge cinza">Diária</span>{% endif %}
+          {% if not a.recorrente and a.data_prevista and a.data_prevista < hoje %}<span class="badge amarelo">Atrasada</span>{% endif %}
+        </legend>
+        {% if a.descricao %}<p class="suave">{{ a.descricao|nl2br }}</p>{% endif %}
+        <div class="form-grade tres">
+          <div class="campo">
+            <label>Situação</label>
+            <select name="itens[{{ a.id }}][status]">
+              <option value="">— não informar —</option>
+              <option value="feita">Feita</option>
+              <option value="parcial">Feita em parte</option>
+              <option value="nao_feita">Não feita</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Horas gastas</label>
+            <input type="number" step="0.25" min="0" max="24" name="itens[{{ a.id }}][horas]" placeholder="0">
+          </div>
+          {% if a.maquina %}
+            <div class="campo">
+              <label>Horímetro final — {{ a.maquina }}</label>
+              <input type="number" step="0.1" min="0" name="itens[{{ a.id }}][horimetro]" placeholder="Atual: {{ a.maquina_horimetro|num_br }}">
+            </div>
+          {% endif %}
+        </div>
+      </fieldset>
+    {% endfor %}
+
+    <fieldset class="atividade-form">
+      <legend>Outra atividade (fora da lista)</legend>
+      <div class="form-grade">
+        <div class="campo"><label>O que foi feito</label><input name="extra_titulo" placeholder="Ex.: Conserto de cerca"></div>
+        <div class="campo"><label>Horas gastas</label><input type="number" step="0.25" min="0" max="24" name="extra_horas"></div>
+        <div class="campo">
+          <label>Máquina usada</label>
+          <select name="extra_maquina">
+            <option value="">Nenhuma</option>
+            {% for m in maquinas %}<option value="{{ m.id }}">{{ m.nome }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="campo"><label>Horímetro final</label><input type="number" step="0.1" min="0" name="extra_horimetro"></div>
+      </div>
+    </fieldset>
+
+    {% if maquinas %}
+      <fieldset class="atividade-form problema">
+        <legend>⚠ Alguma máquina apresentou problema?</legend>
+        <div class="form-grade">
+          <div class="campo">
+            <label>Máquina</label>
+            <select name="problema_maquina">
+              <option value="">Nenhum problema</option>
+              {% for m in maquinas %}<option value="{{ m.id }}">{{ m.nome }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="campo">
+            <label>Gravidade</label>
+            <select name="problema_gravidade">
+              <option value="baixa">Baixa — dá para usar</option>
+              <option value="media" selected>Média — precisa de atenção</option>
+              <option value="alta">Alta — máquina parada</option>
+            </select>
+          </div>
+        </div>
+        <div class="campo">
+          <label>O que aconteceu?</label>
+          <textarea name="problema_descricao" rows="2" placeholder="Ex.: vazamento de óleo hidráulico na mangueira traseira"></textarea>
+        </div>
+      </fieldset>
+    {% endif %}
+
+    <div class="campo">
+      <label for="observacoes">Observações do dia</label>
+      <textarea id="observacoes" name="observacoes" rows="3"></textarea>
+    </div>
+
+    {% if aberto %}
+      <label class="checkbox"><input type="checkbox" name="registrar_saida" checked> Registrar minha saída ao enviar</label>
+    {% else %}
+      <div class="alerta info">Você não registrou entrada hoje. O relatório será enviado mesmo assim.</div>
+    {% endif %}
+
+    <button class="botao grande">Enviar relatório</button>
+  </form>
+{% endif %}
+
+{% if proximas %}
+  <div class="card">
+    <h2>Próximas atividades</h2>
+    <ul class="lista-simples">
+      {% for p in proximas %}<li>📅 {{ p.data_prevista|data_br }} — {{ p.titulo }}</li>{% endfor %}
+    </ul>
+  </div>
+{% endif %}
+{% endblock %}
