@@ -17,7 +17,6 @@
     ('publico.maquinas', 'Máquinas'),
     ('publico.calculadora', 'Calculadora'),
     ('publico.manutencao', 'Manutenção'),
-    ('publico.sobre', 'Sobre'),
   ] %}
   <header>
     <nav class="container nav">
@@ -34,6 +33,7 @@
         {% else %}
           <li><a href="{{ url_for('auth.entrar') }}" class="{{ 'ativo' if request.blueprint == 'auth' }}">Entrar</a></li>
         {% endif %}
+        <li><a href="{{ url_for('publico.sobre') }}" class="{{ 'ativo' if request.endpoint == 'publico.sobre' }}">Sobre</a></li>
       </ul>
     </nav>
   </header>
