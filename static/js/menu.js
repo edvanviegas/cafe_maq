@@ -9,6 +9,18 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Botão "Voltar": volta à página anterior do site; sem histórico, vai para o início (href)
+  const voltar = document.querySelector("[data-voltar]");
+  if (voltar) {
+    voltar.addEventListener("click", function (evento) {
+      const veioDoSite = document.referrer.indexOf(window.location.origin) === 0;
+      if (veioDoSite && window.history.length > 1) {
+        evento.preventDefault();
+        window.history.back();
+      }
+    });
+  }
+
   const ano = document.getElementById("ano");
   if (ano) ano.textContent = new Date().getFullYear();
 });

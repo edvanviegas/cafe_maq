@@ -38,6 +38,14 @@
     </nav>
   </header>
 
+  {% if request.endpoint != 'publico.index' %}
+    <div class="barra-voltar">
+      <div class="container">
+        <a href="{{ url_for('publico.index') }}" class="botao contorno pequeno" data-voltar>{{ ic('seta-esquerda') }} Voltar</a>
+      </div>
+    </div>
+  {% endif %}
+
   {% block topo_painel %}{% endblock %}
 
   {% block principal %}

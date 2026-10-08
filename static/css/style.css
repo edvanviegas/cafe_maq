@@ -138,6 +138,10 @@ header {
 .botao.grande { padding: 14px 30px; font-size: 1.1rem; }
 .botao.largo { width: 100%; }
 
+/* Faixa com o botão Voltar, logo abaixo do menu */
+.barra-voltar { background: var(--fundo); border-bottom: 1px solid var(--borda); padding: 8px 0; }
+.barra-voltar .botao { display: inline-flex; align-items: center; gap: 6px; }
+
 /* ===== Seções do site institucional ===== */
 section { padding: 56px 0; }
 
