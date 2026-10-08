@@ -98,6 +98,12 @@ def primeiro_nome(nome):
     return (nome or '').split(' ')[0]
 
 
+def ic(nome, classe=''):
+    """Ícone de traço sem cor (desenhos em templates/_icones.html)."""
+    extra = ' ' + classe if classe else ''
+    return Markup('<svg class="ic%s" aria-hidden="true"><use href="#ic-%s"></use></svg>' % (extra, escape(nome)))
+
+
 FILTROS = {
     'data_br': data_br,
     'hora_br': hora_br,

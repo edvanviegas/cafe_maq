@@ -9,7 +9,7 @@
     <h2>Primeiros passos</h2>
     <ol class="passos">
       {% for texto, feito, link in primeiros_passos %}
-        <li class="{{ 'feito' if feito }}">{{ '✔' if feito else '○' }} <a href="{{ link }}">{{ texto }}</a></li>
+        <li class="{{ 'feito' if feito }}">{{ ic('check') if feito else ic('ponto') }} <a href="{{ link }}">{{ texto }}</a></li>
       {% endfor %}
     </ol>
   </div>
@@ -29,7 +29,7 @@
     {% if not trabalhando %}<p class="vazio">Ninguém com ponto aberto no momento.</p>{% endif %}
     <ul class="lista-simples">
       {% for t in trabalhando %}
-        <li>🟢 <strong>{{ t.nome }}</strong> <span class="suave">{{ t.funcao or '' }} · desde {{ t.entrada|hora_br }} ({{ t.horas|horas_br }})</span></li>
+        <li>{{ ic('ponto-cheio') }} <strong>{{ t.nome }}</strong> <span class="suave">{{ t.funcao or '' }} · desde {{ t.entrada|hora_br }} ({{ t.horas|horas_br }})</span></li>
       {% endfor %}
     </ul>
   </div>

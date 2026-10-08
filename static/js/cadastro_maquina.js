@@ -58,7 +58,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (d.preco_referencia) linhas.push(["Preço de referência (nova)", reais(d.preco_referencia)]);
 
     const titulo = document.createElement("h3");
-    titulo.textContent = d.icone + " " + d.nome;
+    titulo.innerHTML = icone(d.icone) + " ";
+    titulo.appendChild(document.createTextNode(d.nome));
 
     const dados = document.createElement("div");
     dados.className = "dados-maquina";

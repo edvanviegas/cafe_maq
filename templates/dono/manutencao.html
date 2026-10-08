@@ -14,7 +14,7 @@
 
 {% if ocorrencias %}
   <div class="card borda-vermelha">
-    <h2>⚠ Problemas relatados pelos funcionários</h2>
+    <h2>{{ ic('alerta') }} Problemas relatados pelos funcionários</h2>
     {% for o in ocorrencias %}
       <div class="ocorrencia">
         <div>
@@ -49,7 +49,7 @@
   <div class="grade-maquinas">
     {% for m in maquinas %}
       <a href="{{ url_for('dono.manutencao', maquina=m.id) }}" class="card-maquina {{ 'selecionada' if sel and sel.id == m.id }} {{ 'alerta' if m.revisao.estado == 'vencida' or m.abertas }}">
-        <span class="icone-maquina">{{ TIPOS.get(m.tipo, TIPOS.outra).icone }}</span>
+        <span class="icone-maquina">{{ ic(TIPOS.get(m.tipo, TIPOS.outra).icone) }}</span>
         <span>
           <strong>{{ m.nome }}</strong>
           <small class="suave">{{ descricao_maquina(m) }}</small>
@@ -133,7 +133,7 @@
     {% if sel %}
       {% set gasto_total = historico|sum(attribute='custo') %}
       <div class="card">
-        <h2>{{ TIPOS.get(sel.tipo, TIPOS.outra).icone }} {{ sel.nome }}</h2>
+        <h2>{{ ic(TIPOS.get(sel.tipo, TIPOS.outra).icone) }} {{ sel.nome }}</h2>
         <p class="suave">{{ descricao_maquina(sel) }}</p>
         <div class="dados-maquina">
           <div><span>Horímetro</span><strong>{{ sel.horimetro|num_br }} h</strong></div>
@@ -188,7 +188,7 @@
       <ul class="lista-simples">
         {% for a in agendadas %}
           <li>
-            📅 {{ a.data_prevista|data_br }} — <strong>{{ a.titulo }}</strong>
+            {{ ic('calendario') }} {{ a.data_prevista|data_br }} — <strong>{{ a.titulo }}</strong>
             <span class="suave">· {{ a.maquina }} · {{ a.funcionario or 'qualquer funcionário' }}</span>
             {% if a.data_prevista and a.data_prevista < hoje %}<span class="badge amarelo">Atrasada</span>{% endif %}
             <a href="{{ url_for('dono.manutencao', atividade=a.id) }}#form-manutencao">registrar</a>

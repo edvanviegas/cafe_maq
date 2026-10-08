@@ -13,7 +13,7 @@ Marcas sem modelos listados continuam aceitando o modelo digitado livremente.
 TIPOS = {
     'trator': {
         'nome': 'Trator cafeeiro',
-        'icone': '🚜',
+        'icone': 'trator',
         'revisao': 250,
         'preco_referencia': 230000,
         'vida_util': 12000,
@@ -27,7 +27,7 @@ TIPOS = {
     },
     'colhedora': {
         'nome': 'Colhedora automotriz',
-        'icone': '🌿',
+        'icone': 'folha',
         'revisao': 150,
         'preco_referencia': 1300000,
         'vida_util': 3000,
@@ -41,7 +41,7 @@ TIPOS = {
     },
     'colhedora-tracionada': {
         'nome': 'Colhedora tracionada',
-        'icone': '⚙️',
+        'icone': 'engrenagem',
         'revisao': 150,
         'preco_referencia': 420000,
         'vida_util': 3000,
@@ -55,7 +55,7 @@ TIPOS = {
     },
     'pulverizador': {
         'nome': 'Pulverizador',
-        'icone': '💨',
+        'icone': 'vento',
         'revisao': 100,
         'preco_referencia': 95000,
         'vida_util': 2000,
@@ -69,7 +69,7 @@ TIPOS = {
     },
     'rocadeira': {
         'nome': 'Roçadeira',
-        'icone': '🌾',
+        'icone': 'trigo',
         'revisao': 100,
         'preco_referencia': 38000,
         'vida_util': 2000,
@@ -83,7 +83,7 @@ TIPOS = {
     },
     'adubadora': {
         'nome': 'Adubadora / distribuidora',
-        'icone': '🧪',
+        'icone': 'frasco',
         'revisao': 100,
         'preco_referencia': 45000,
         'vida_util': 1200,
@@ -97,7 +97,7 @@ TIPOS = {
     },
     'derricadeira': {
         'nome': 'Derriçadeira portátil',
-        'icone': '🔧',
+        'icone': 'chave',
         'revisao': 50,
         'preco_referencia': 4500,
         'vida_util': 1500,
@@ -111,7 +111,7 @@ TIPOS = {
     },
     'outra': {
         'nome': 'Outra',
-        'icone': '🛠️',
+        'icone': 'ferramentas',
         'revisao': 250,
         'preco_referencia': None,
         'vida_util': None,

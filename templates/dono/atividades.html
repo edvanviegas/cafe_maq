@@ -11,9 +11,9 @@
       {% if atrasada %}<span class="badge amarelo">Atrasada</span>{% endif %}
       {% if a.descricao %}<p class="suave">{{ a.descricao|nl2br }}</p>{% endif %}
       <small class="suave">
-        👤 {{ a.funcionario or 'Qualquer funcionário' }}
-        {% if a.maquina %} · 🚜 {{ a.maquina }}{% endif %}
-        {% if a.data_prevista %} · 📅 {{ 'a partir de ' if a.recorrente }}{{ a.data_prevista|data_br }}{% endif %}
+        {{ ic('usuario') }} {{ a.funcionario or 'Qualquer funcionário' }}
+        {% if a.maquina %} · {{ ic('trator') }} {{ a.maquina }}{% endif %}
+        {% if a.data_prevista %} · {{ ic('calendario') }} {{ 'a partir de ' if a.recorrente }}{{ a.data_prevista|data_br }}{% endif %}
         {% if a.ultima_execucao %} · última execução {{ a.ultima_execucao|data_br }}{% endif %}
       </small>
     </div>

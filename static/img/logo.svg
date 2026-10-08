@@ -1,12 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="CafeMaq">
-  <rect width="64" height="64" rx="14" fill="#1b4332"/>
-  <!-- vapor -->
-  <path d="M24 17c-3 3 3 5 0 9M32 15c-3 3 3 5 0 9M40 17c-3 3 3 5 0 9" fill="none" stroke="#f7f5f0" stroke-width="2.4" stroke-linecap="round"/>
-  <!-- xícara -->
-  <path d="M15 30h30v10a11 11 0 0 1-11 11h-8a11 11 0 0 1-11-11z" fill="#f7f5f0"/>
-  <path d="M45 33h4a5 5 0 0 1 0 10h-5" fill="none" stroke="#f7f5f0" stroke-width="3.2" stroke-linecap="round"/>
-  <!-- café -->
-  <rect x="15" y="30" width="30" height="5" fill="#2d6a4f"/>
-  <!-- detalhe vermelho -->
-  <rect x="21" y="54" width="22" height="4" rx="2" fill="#b3121f"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="CafeMaq">
+  <rect width="200" height="200" rx="44" fill="#1b4332"/>
+  <path d="M96 86A35 35 0 1 0 96 134" fill="none" stroke="#f7f5f0" stroke-width="15" stroke-linecap="round"/>
+  <path d="M122 140V94L143 120L164 94V140" fill="none" stroke="#f7f5f0" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M146 66C148 54 158 48 168 50C167 60 158 68 146 66Z" fill="#52b788"/>
+  <circle cx="140" cy="70" r="10" fill="#e63946"/>
+  <rect x="46" y="162" width="108" height="8" rx="4" fill="#e63946"/>
 </svg>

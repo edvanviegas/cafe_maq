@@ -62,7 +62,7 @@
     </div>
 
     {% for o in r.problemas %}
-      <div class="alerta erro">⚠ <strong>{{ o.maquina }}</strong> ({{ badge_gravidade(o.gravidade) }}): {{ o.descricao }}
+      <div class="alerta erro">{{ ic('alerta') }} <strong>{{ o.maquina }}</strong> ({{ badge_gravidade(o.gravidade) }}): {{ o.descricao }}
         — {% if o.status == 'aberta' %}<a href="{{ url_for('dono.manutencao', ocorrencia=o.id) }}#form-manutencao">registrar conserto</a>{% else %}resolvido{% endif %}</div>
     {% endfor %}
 

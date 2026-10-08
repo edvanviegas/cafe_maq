@@ -171,7 +171,20 @@ p + p { margin-top: 12px; }
 
 .grade .card:nth-child(even) { border-top-color: var(--vermelho); }
 
-.card .icone { font-size: 2.2rem; margin-bottom: 8px; }
+/* Ícones de traço, sem cor: herdam a cor do texto */
+.ic {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -0.2em;
+}
+.card .icone { margin-bottom: 8px; color: var(--verde-escuro); }
+.card .icone .ic { width: 2.4rem; height: 2.4rem; stroke-width: 1.75; }
 .card p { color: var(--texto-suave); }
 .card ul { margin: 12px 0 0 18px; color: var(--texto-suave); font-size: 0.95rem; }
 
@@ -227,6 +240,7 @@ p + p { margin-top: 12px; }
 }
 
 .numero strong { display: block; font-size: 2.2rem; color: var(--vermelho); }
+.numero strong .ic { width: 2.2rem; height: 2.2rem; stroke-width: 1.75; }
 .numero span { color: var(--texto-suave); }
 
 /* ===== Calculadora ===== */
@@ -596,7 +610,7 @@ footer {
 .card-maquina.alerta { border-left-color: var(--vermelho); }
 .card-maquina:hover { box-shadow: 0 0 0 2px var(--verde-claro), var(--sombra); }
 .card-maquina.selecionada { box-shadow: 0 0 0 2px var(--verde), var(--sombra); }
-.icone-maquina { font-size: 1.8rem; line-height: 1; }
+.icone-maquina { font-size: 1.8rem; line-height: 1; color: var(--verde-escuro); }
 
 .checklist { display: grid; gap: 2px; }
 .checklist .checkbox { margin: 2px 0; font-weight: 400; }

@@ -7,8 +7,10 @@
   <title>{% block titulo %}CafeMaq{% endblock %} - CafeMaq</title>
   <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/icones.js') }}"></script>
 </head>
 <body>
+  {% include '_icones.html' %}
 
   {% set menu = [
     ('publico.index', 'Início'),
@@ -20,7 +22,7 @@
   <header>
     <nav class="container nav">
       <a href="{{ url_for('publico.index') }}" class="logo"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt=""> CafeMaq</a>
-      <button class="menu-botao" aria-label="Abrir menu">☰</button>
+      <button class="menu-botao" aria-label="Abrir menu">{{ ic('menu') }}</button>
       <ul class="menu">
         {% for endpoint, nome in menu %}
           <li><a href="{{ url_for(endpoint) }}" class="{{ 'ativo' if request.endpoint == endpoint }}">{{ nome }}</a></li>

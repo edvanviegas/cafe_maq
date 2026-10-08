@@ -26,6 +26,7 @@ def criar_app():
         app.register_blueprint(bp)
 
     app.jinja_env.filters.update(utils.FILTROS)
+    app.jinja_env.globals['ic'] = utils.ic
 
     @app.context_processor
     def variaveis_dos_templates():

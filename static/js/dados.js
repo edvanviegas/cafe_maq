@@ -18,7 +18,7 @@ const MAQUINAS = [
   {
     id: "trator",
     nome: "Trator cafeeiro (75–80 cv)",
-    icone: "🚜",
+    icone: "trator",
     descricao: "Trator estreito usado para tracionar implementos entre as linhas do cafezal.",
     preco: 230000,
     vidaUtil: 12000,
@@ -37,7 +37,7 @@ const MAQUINAS = [
   {
     id: "colhedora",
     nome: "Colhedora automotriz de café",
-    icone: "🌿",
+    icone: "folha",
     descricao: "Máquina de grande porte que colhe o café por vibração das hastes, montada sobre a linha.",
     preco: 1300000,
     vidaUtil: 3000,
@@ -56,7 +56,7 @@ const MAQUINAS = [
   {
     id: "colhedora-tracionada",
     nome: "Colhedora tracionada de café",
-    icone: "⚙️",
+    icone: "engrenagem",
     descricao: "Colhedora acoplada ao trator, opção mais acessível para médias propriedades.",
     preco: 420000,
     vidaUtil: 3000,
@@ -75,7 +75,7 @@ const MAQUINAS = [
   {
     id: "pulverizador",
     nome: "Pulverizador turboatomizador (2.000 L)",
-    icone: "💨",
+    icone: "vento",
     descricao: "Aplica defensivos e foliares com jato de ar, cobrindo toda a copa do cafeeiro.",
     preco: 95000,
     vidaUtil: 2000,
@@ -94,7 +94,7 @@ const MAQUINAS = [
   {
     id: "rocadeira",
     nome: "Roçadeira central / lateral",
-    icone: "🌾",
+    icone: "trigo",
     descricao: "Controle do mato nas entrelinhas, acoplada ao trator.",
     preco: 38000,
     vidaUtil: 2000,
@@ -113,7 +113,7 @@ const MAQUINAS = [
   {
     id: "adubadora",
     nome: "Adubadora / distribuidora",
-    icone: "🧪",
+    icone: "frasco",
     descricao: "Distribui fertilizantes e corretivos ao longo das linhas de plantio.",
     preco: 45000,
     vidaUtil: 1200,
@@ -132,7 +132,7 @@ const MAQUINAS = [
   {
     id: "derricadeira",
     nome: "Derriçadeira portátil",
-    icone: "🔧",
+    icone: "chave",
     descricao: "Equipamento costal/manual para colheita semimecanizada em áreas de montanha.",
     preco: 4500,
     vidaUtil: 1500,

@@ -13,7 +13,7 @@
     <section>
       <div class="container">
         <div class="aviso">
-          ⚠️ Os preços são estimativas de referência e variam com marca, modelo e região.
+          {{ ic('alerta') }} Os preços são estimativas de referência e variam com marca, modelo e região.
           Use a <a href="{{ url_for('publico.calculadora') }}">calculadora</a> para simular com os seus valores.
         </div>
         <div class="grade" id="lista-maquinas"></div>
@@ -35,7 +35,7 @@
 
       lista.innerHTML +=
         '<div class="card">' +
-          '<div class="icone">' + m.icone + '</div>' +
+          '<div class="icone">' + icone(m.icone) + '</div>' +
           '<h3>' + m.nome + '</h3>' +
           '<p>' + m.descricao + '</p>' +
           '<div class="dados-maquina">' +

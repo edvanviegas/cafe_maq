@@ -15,19 +15,19 @@
         <h2>Tipos de manutenção</h2>
         <div class="grade">
           <div class="card">
-            <div class="icone">📅</div>
+            <div class="icone">{{ ic('calendario') }}</div>
             <h3>Preventiva</h3>
             <p>Feita em intervalos programados (horas de uso ou calendário): trocas de óleo, filtros,
                lubrificação e revisões. Evita a maior parte das quebras.</p>
           </div>
           <div class="card">
-            <div class="icone">🔍</div>
+            <div class="icone">{{ ic('lupa') }}</div>
             <h3>Preditiva</h3>
             <p>Acompanha o estado da máquina (ruídos, vibração, temperatura, análise de óleo) para
                trocar peças no momento certo, antes que falhem.</p>
           </div>
           <div class="card" style="border-top-color: var(--vermelho);">
-            <div class="icone">🚨</div>
+            <div class="icone">{{ ic('alerta-circulo') }}</div>
             <h3>Corretiva</h3>
             <p>Conserto depois da quebra. É a mais cara: além da peça, há a máquina parada,
                atraso na colheita e perda de qualidade do café.</p>
@@ -60,21 +60,21 @@
         <h2>Boas práticas</h2>
         <div class="grade">
           <div class="card">
-            <h3>📋 Registre tudo</h3>
+            <h3>{{ ic('prancheta') }} Registre tudo</h3>
             <p>Anote cada manutenção, peça trocada e valor gasto. Esse histórico mostra qual máquina
                está custando caro demais.</p>
           </div>
           <div class="card">
-            <h3>⏱️ Use o horímetro</h3>
+            <h3>{{ ic('relogio') }} Use o horímetro</h3>
             <p>Programe as revisões pelas horas trabalhadas, seguindo o manual do fabricante.</p>
           </div>
           <div class="card">
-            <h3>👨‍🔧 Treine os operadores</h3>
+            <h3>{{ ic('capacete') }} Treine os operadores</h3>
             <p>Operadores bem treinados evitam sobrecarga, identificam problemas cedo e fazem a
                checagem diária corretamente.</p>
           </div>
           <div class="card">
-            <h3>🏠 Guarde em local coberto</h3>
+            <h3>{{ ic('casa') }} Guarde em local coberto</h3>
             <p>Sol e chuva aceleram a corrosão e o desgaste de mangueiras, pneus e componentes elétricos.</p>
           </div>
         </div>

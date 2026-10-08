@@ -36,19 +36,19 @@
         <h2>O que você encontra aqui</h2>
         <div class="grade">
           <div class="card">
-            <div class="icone">🚜</div>
+            <div class="icone">{{ ic('trator') }}</div>
             <h3>Catálogo de máquinas</h3>
             <p>Os principais equipamentos da lavoura de café, com preço de referência, vida útil e consumo.</p>
             <p><a href="{{ url_for('publico.maquinas') }}">Ver catálogo →</a></p>
           </div>
           <div class="card">
-            <div class="icone">🧮</div>
+            <div class="icone">{{ ic('calculadora') }}</div>
             <h3>Calculadora de custos</h3>
             <p>Informe o preço, as horas de uso e a idade da máquina e veja o custo anual e por hora.</p>
             <p><a href="{{ url_for('publico.calculadora') }}">Usar calculadora →</a></p>
           </div>
           <div class="card">
-            <div class="icone">🛠️</div>
+            <div class="icone">{{ ic('ferramentas') }}</div>
             <h3>Manutenção preventiva</h3>
             <p>Checklists e boas práticas para reduzir quebras e aumentar a vida útil dos equipamentos.</p>
             <p><a href="{{ url_for('publico.manutencao') }}">Ver dicas →</a></p>
@@ -74,9 +74,9 @@
       <div class="container">
         <h2>Composição do custo</h2>
         <div class="numeros">
-          <div class="numero"><strong>🔩</strong><span><b>Reparos e peças</b><br>troca de componentes desgastados e consertos</span></div>
-          <div class="numero"><strong>🛢️</strong><span><b>Lubrificantes</b><br>óleos, graxas e filtros</span></div>
-          <div class="numero"><strong>⛽</strong><span><b>Combustível</b><br>diesel ou gasolina por hora trabalhada</span></div>
+          <div class="numero"><strong>{{ ic('porca') }}</strong><span><b>Reparos e peças</b><br>troca de componentes desgastados e consertos</span></div>
+          <div class="numero"><strong>{{ ic('gota') }}</strong><span><b>Lubrificantes</b><br>óleos, graxas e filtros</span></div>
+          <div class="numero"><strong>{{ ic('combustivel') }}</strong><span><b>Combustível</b><br>diesel ou gasolina por hora trabalhada</span></div>
         </div>
       </div>
     </section>

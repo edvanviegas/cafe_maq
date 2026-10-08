@@ -18,7 +18,7 @@
         {% for m in maquinas %}
           <tr class="{{ 'inativo' if not m.ativo }}">
             <td>
-              <strong>{{ TIPOS.get(m.tipo, TIPOS.outra).icone }} {{ m.nome }}</strong><br>
+              <strong>{{ ic(TIPOS.get(m.tipo, TIPOS.outra).icone) }} {{ m.nome }}</strong><br>
               <small class="suave">{{ descricao_maquina(m) }}</small>
             </td>
             <td>{{ m.horimetro|num_br }} h</td>
@@ -67,7 +67,7 @@
           <label for="tipo">Tipo *</label>
           <select id="tipo" name="tipo">
             {% for chave, t in TIPOS.items() %}
-              <option value="{{ chave }}" {{ 'selected' if editar and editar.tipo == chave }}>{{ t.icone }} {{ t.nome }}</option>
+              <option value="{{ chave }}" {{ 'selected' if editar and editar.tipo == chave }}>{{ t.nome }}</option>
             {% endfor %}
           </select>
         </div>

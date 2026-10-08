@@ -9,9 +9,9 @@
   <div>
     <h2>Ponto</h2>
     {% if aberto %}
-      <p class="ponto-status">🟢 Trabalhando desde <strong>{{ aberto.entrada|hora_br }}</strong></p>
+      <p class="ponto-status">{{ ic('ponto-cheio') }} Trabalhando desde <strong>{{ aberto.entrada|hora_br }}</strong></p>
     {% else %}
-      <p class="ponto-status">⚪ Fora do expediente</p>
+      <p class="ponto-status">{{ ic('ponto') }} Fora do expediente</p>
     {% endif %}
     <p class="suave">Hoje: {{ horas_hoje|horas_br }} trabalhadas
       {% for p in pontos_hoje %} · {{ p.entrada|hora_br }}–{{ p.saida|hora_br if p.saida else 'agora' }}{% endfor %}
@@ -32,11 +32,11 @@
 <!-- ===== Relatório do dia ===== -->
 {% if relatorio_hoje %}
   <div class="card borda-verde">
-    <h2>✅ Relatório de hoje enviado</h2>
+    <h2>{{ ic('check-circulo') }} Relatório de hoje enviado</h2>
     <p class="suave">Enviado às {{ relatorio_hoje.criado_em|hora_br }}.</p>
     <ul class="lista-simples">
       {% for i in itens_hoje %}
-        <li>{{ {'feita': '✔', 'parcial': '◐', 'nao_feita': '✖'}[i.status] }} {{ i.atividade_titulo }}
+        <li>{{ ic({'feita': 'check', 'parcial': 'meio', 'nao_feita': 'x'}[i.status]) }} {{ i.atividade_titulo }}
           {% if i.horas > 0 %}<span class="suave">({{ i.horas|horas_br }})</span>{% endif %}</li>
       {% endfor %}
     </ul>
@@ -104,7 +104,7 @@
 
     {% if maquinas %}
       <fieldset class="atividade-form problema">
-        <legend>⚠ Alguma máquina apresentou problema?</legend>
+        <legend>{{ ic('alerta') }} Alguma máquina apresentou problema?</legend>
         <div class="form-grade">
           <div class="campo">
             <label>Máquina</label>
@@ -148,7 +148,7 @@
   <div class="card">
     <h2>Próximas atividades</h2>
     <ul class="lista-simples">
-      {% for p in proximas %}<li>📅 {{ p.data_prevista|data_br }} — {{ p.titulo }}</li>{% endfor %}
+      {% for p in proximas %}<li>{{ ic('calendario') }} {{ p.data_prevista|data_br }} — {{ p.titulo }}</li>{% endfor %}
     </ul>
   </div>
 {% endif %}

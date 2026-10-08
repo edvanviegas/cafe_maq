@@ -81,7 +81,7 @@ function montarProjecao(m, preco, horasUsadas, horasAno) {
 MAQUINAS.forEach(function (m) {
   const opcao = document.createElement("option");
   opcao.value = m.id;
-  opcao.textContent = m.icone + " " + m.nome;
+  opcao.textContent = m.nome;
   campos.maquina.appendChild(opcao);
 });
 
