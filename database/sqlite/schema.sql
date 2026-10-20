@@ -1,7 +1,10 @@
--- CafeMaq - estrutura do banco SQLite.
--- É criado automaticamente na primeira execução do app (banco.py).
+-- CafeMaq - estrutura do banco SQLite (modo de teste rápido, DB_TIPO=sqlite).
+-- É criado/atualizado automaticamente ao iniciar o app (banco.py).
+--
+-- O banco OFICIAL do projeto é o MySQL (database/mysql), que além das tabelas
+-- tem usuários com permissões, funções, procedimentos e triggers.
 
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nome TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
@@ -11,7 +14,7 @@ CREATE TABLE usuarios (
   criado_em TEXT NOT NULL
 );
 
-CREATE TABLE fazendas (
+CREATE TABLE IF NOT EXISTS fazendas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   dono_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   nome TEXT NOT NULL,
@@ -22,7 +25,7 @@ CREATE TABLE fazendas (
   criado_em TEXT NOT NULL
 );
 
-CREATE TABLE funcionarios (
+CREATE TABLE IF NOT EXISTS funcionarios (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   fazenda_id INTEGER NOT NULL REFERENCES fazendas(id) ON DELETE CASCADE,
   usuario_id INTEGER NULL REFERENCES usuarios(id) ON DELETE SET NULL,
@@ -34,7 +37,7 @@ CREATE TABLE funcionarios (
   UNIQUE (fazenda_id, email)
 );
 
-CREATE TABLE maquinas (
+CREATE TABLE IF NOT EXISTS maquinas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   fazenda_id INTEGER NOT NULL REFERENCES fazendas(id) ON DELETE CASCADE,
   nome TEXT NOT NULL,
@@ -49,7 +52,7 @@ CREATE TABLE maquinas (
   criado_em TEXT NOT NULL
 );
 
-CREATE TABLE atividades (
+CREATE TABLE IF NOT EXISTS atividades (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   fazenda_id INTEGER NOT NULL REFERENCES fazendas(id) ON DELETE CASCADE,
   titulo TEXT NOT NULL,
@@ -63,7 +66,7 @@ CREATE TABLE atividades (
   criado_em TEXT NOT NULL
 );
 
-CREATE TABLE ponto (
+CREATE TABLE IF NOT EXISTS ponto (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   fazenda_id INTEGER NOT NULL REFERENCES fazendas(id) ON DELETE CASCADE,
   funcionario_id INTEGER NOT NULL REFERENCES funcionarios(id) ON DELETE CASCADE,
@@ -71,7 +74,7 @@ CREATE TABLE ponto (
   saida TEXT NULL
 );
 
-CREATE TABLE relatorios (
+CREATE TABLE IF NOT EXISTS relatorios (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   fazenda_id INTEGER NOT NULL REFERENCES fazendas(id) ON DELETE CASCADE,
   funcionario_id INTEGER NOT NULL REFERENCES funcionarios(id) ON DELETE CASCADE,
@@ -81,7 +84,7 @@ CREATE TABLE relatorios (
   UNIQUE (funcionario_id, data)
 );
 
-CREATE TABLE relatorio_itens (
+CREATE TABLE IF NOT EXISTS relatorio_itens (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   relatorio_id INTEGER NOT NULL REFERENCES relatorios(id) ON DELETE CASCADE,
   atividade_id INTEGER NULL REFERENCES atividades(id) ON DELETE SET NULL,
@@ -92,7 +95,7 @@ CREATE TABLE relatorio_itens (
   horimetro REAL NULL
 );
 
-CREATE TABLE ocorrencias (
+CREATE TABLE IF NOT EXISTS ocorrencias (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   fazenda_id INTEGER NOT NULL REFERENCES fazendas(id) ON DELETE CASCADE,
   maquina_id INTEGER NOT NULL REFERENCES maquinas(id) ON DELETE CASCADE,
@@ -105,7 +108,7 @@ CREATE TABLE ocorrencias (
   resolvida_em TEXT NULL
 );
 
-CREATE TABLE manutencoes (
+CREATE TABLE IF NOT EXISTS manutencoes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   fazenda_id INTEGER NOT NULL REFERENCES fazendas(id) ON DELETE CASCADE,
   maquina_id INTEGER NOT NULL REFERENCES maquinas(id) ON DELETE CASCADE,
@@ -116,4 +119,30 @@ CREATE TABLE manutencoes (
   horimetro REAL NULL,
   ocorrencia_id INTEGER NULL REFERENCES ocorrencias(id) ON DELETE SET NULL,
   criado_em TEXT NOT NULL
+);
+
+-- Log de autenticação (login, falhas, bloqueios, saída) - usado contra força bruta
+CREATE TABLE IF NOT EXISTS log_acesso (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  usuario_id INTEGER NULL REFERENCES usuarios(id) ON DELETE SET NULL,
+  email TEXT NULL,
+  evento TEXT NOT NULL,
+  ip TEXT NULL,
+  navegador TEXT NULL,
+  criado_em TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_log_acesso_ip ON log_acesso (ip, evento, criado_em);
+CREATE INDEX IF NOT EXISTS ix_log_acesso_email ON log_acesso (email, evento, criado_em);
+
+-- Trilha de auditoria (no MySQL é preenchida pelos triggers)
+CREATE TABLE IF NOT EXISTS log_auditoria (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tabela TEXT NOT NULL,
+  registro_id INTEGER NOT NULL,
+  acao TEXT NOT NULL,
+  dados_antes TEXT NULL,
+  dados_depois TEXT NULL,
+  usuario_app INTEGER NULL,
+  usuario_bd TEXT NOT NULL DEFAULT 'sqlite',
+  criado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
