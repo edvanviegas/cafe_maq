@@ -1,0 +1,38 @@
+{# Layout das páginas do sistema (dono e funcionário): barra com o usuário e as abas #}
+{% extends 'base.html' %}
+
+{% block topo_painel %}
+  {% if usuario.tipo == 'dono' %}
+    {% set abas = [
+      ('geral', 'dono.index', 'Visão geral'),
+      ('desempenho', 'dono.desempenho', 'Desempenho'),
+      ('relatorios', 'dono.relatorios', 'Relatórios'),
+      ('atividades', 'dono.atividades', 'Atividades'),
+      ('maquinas', 'dono.maquinas', 'Máquinas'),
+      ('manutencao', 'dono.manutencao', 'Manutenção'),
+      ('funcionarios', 'dono.funcionarios', 'Funcionários'),
+      ('fazendas', 'dono.fazendas', 'Fazendas'),
+    ] %}
+  {% else %}
+    {% set abas = [
+      ('dia', 'funcionario.index', 'Meu dia'),
+      ('historico', 'funcionario.historico', 'Histórico'),
+    ] %}
+  {% endif %}
+  <div class="painel-topo">
+    <div class="container">
+      <div class="painel-usuario">
+        <span class="badge {{ 'vermelho' if usuario.tipo == 'dono' else 'verde' }}">{{ 'Dono' if usuario.tipo == 'dono' else 'Funcionário' }}</span>
+        <strong>{{ usuario.nome }}</strong>
+        {% if usuario.tipo == 'dono' and fazenda %}
+          <span class="painel-fazenda">· {{ fazenda.nome }} <a href="{{ url_for('dono.fazendas') }}">(trocar)</a></span>
+        {% endif %}
+      </div>
+      <nav class="painel-abas">
+        {% for chave, endpoint, nome in abas %}
+          <a href="{{ url_for(endpoint) }}" class="{{ 'ativo' if chave == aba }}">{{ nome }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+  </div>
+{% endblock %}

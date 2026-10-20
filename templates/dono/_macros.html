@@ -1,0 +1,41 @@
+{# Pedaços reaproveitados nas páginas do dono #}
+
+{% macro badge_revisao(r) -%}
+  {% if r.estado == 'sem' %}
+    <span class="badge amarelo">Sem revisão registrada</span>
+  {% elif r.estado == 'vencida' %}
+    <span class="badge vermelho">Vencida ({{ r.desde|num_br(0) }} h de {{ r.intervalo|num_br(0) }} h)</span>
+  {% elif r.estado == 'proxima' %}
+    <span class="badge amarelo">Próxima · faltam {{ r.faltam|num_br(0) }} h</span>
+  {% else %}
+    <span class="badge verde">Em dia · faltam {{ r.faltam|num_br(0) }} h</span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro descricao_maquina(m) -%}
+  {{ m.tipo_nome }}{% if m.marca or m.modelo %} · {{ [m.marca, m.modelo]|select|join(' ') }}{% endif %}{% if m.ano %} · {{ m.ano }}{% endif %}
+{%- endmacro %}
+
+{% macro badge_gravidade(gravidade) -%}
+  <span class="badge {{ {'alta': 'vermelho', 'media': 'amarelo', 'baixa': 'cinza'}[gravidade] }}">Gravidade {{ 'média' if gravidade == 'media' else gravidade }}</span>
+{%- endmacro %}
+
+{% macro tabela_manutencoes(historico, mostrar_maquina=true) -%}
+  <div class="tabela-wrap">
+    <table>
+      <thead><tr><th>Data</th>{% if mostrar_maquina %}<th>Máquina</th>{% endif %}<th>Tipo</th><th>Serviço</th><th>Horímetro</th><th>Custo</th></tr></thead>
+      <tbody>
+      {% for h in historico %}
+        <tr>
+          <td>{{ h.data|data_br }}</td>
+          {% if mostrar_maquina %}<td><a href="{{ url_for('dono.manutencao', maquina=h.maquina_id) }}">{{ h.maquina }}</a></td>{% endif %}
+          <td><span class="badge {{ 'verde' if h.tipo == 'preventiva' else 'vermelho' }}">{{ h.tipo|capitalize }}</span></td>
+          <td class="quebra">{{ h.descricao }}</td>
+          <td>{{ (h.horimetro|num_br ~ ' h') if h.horimetro is not none else '—' }}</td>
+          <td>{{ h.custo|reais }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{%- endmacro %}

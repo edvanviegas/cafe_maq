@@ -1,0 +1,69 @@
+{% extends 'painel.html' %}
+{% block titulo %}Fazendas{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-app">Minhas fazendas</h1>
+
+<div class="duas-colunas">
+  <div>
+    {% if not fazendas %}
+      <div class="vazio card">Você ainda não cadastrou nenhuma fazenda. Use o formulário ao lado para começar.</div>
+    {% endif %}
+    {% for f in fazendas %}
+      {% set em_uso = atual and atual.id == f.id %}
+      <div class="card item-lista {{ 'selecionado' if em_uso }}">
+        <div>
+          <h3>{{ f.nome }}</h3>
+          <p class="suave">
+            {{ ([f.municipio, f.estado]|select|join(' - ')) or 'Local não informado' }}
+            {% if f.area_ha %} · {{ f.area_ha|num_br }} ha{% endif %}
+            {% if f.producao_sacas %} · {{ f.producao_sacas|num_br(0) }} sacas/ano{% endif %}
+          </p>
+          <p class="suave">{{ f.total_func }} funcionário(s) · {{ f.total_maq }} máquina(s)</p>
+        </div>
+        <div class="acoes">
+          {% if em_uso %}
+            <span class="badge verde">Em uso</span>
+          {% else %}
+            <form method="post">{{ csrf_campo() }}
+              <input type="hidden" name="acao" value="selecionar"><input type="hidden" name="id" value="{{ f.id }}">
+              <button class="botao pequeno">Usar esta</button>
+            </form>
+          {% endif %}
+          <a href="{{ url_for('dono.fazendas', editar=f.id) }}" class="botao pequeno contorno">Editar</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <form method="post" class="card formulario">
+    {{ csrf_campo() }}
+    <input type="hidden" name="acao" value="salvar">
+    <input type="hidden" name="id" value="{{ editar.id if editar }}">
+    <h2>{{ 'Editar fazenda' if editar else 'Cadastrar fazenda' }}</h2>
+    <div class="campo">
+      <label for="nome">Nome da fazenda *</label>
+      <input id="nome" name="nome" value="{{ editar.nome if editar }}" required>
+    </div>
+    <div class="form-grade">
+      <div class="campo">
+        <label for="municipio">Município</label>
+        <input id="municipio" name="municipio" value="{{ editar.municipio or '' if editar }}">
+      </div>
+      <div class="campo">
+        <label for="estado">UF</label>
+        <input id="estado" name="estado" maxlength="2" value="{{ editar.estado or '' if editar }}" placeholder="MG">
+      </div>
+      <div class="campo">
+        <label for="area_ha">Área de café (ha)</label>
+        <input type="number" step="0.01" min="0" id="area_ha" name="area_ha" value="{{ editar.area_ha or '' if editar }}">
+      </div>
+      <div class="campo">
+        <label for="producao_sacas">Produção (sacas/ano)</label>
+        <input type="number" min="0" id="producao_sacas" name="producao_sacas" value="{{ editar.producao_sacas or '' if editar }}">
+      </div>
+    </div>
+    <button class="botao">{{ 'Salvar alterações' if editar else 'Cadastrar fazenda' }}</button>
+    {% if editar %}<a href="{{ url_for('dono.fazendas') }}" class="botao contorno">Cancelar</a>{% endif %}
+  </form>
+</div>
+{% endblock %}
