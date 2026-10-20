@@ -20,12 +20,14 @@
               <td>{% if f.usuario_id %}<span class="badge verde">Vinculado</span>{% else %}<span class="badge amarelo">Aguardando cadastro</span>{% endif %}</td>
               <td>{% if f.em_servico %}<span class="badge verde">Trabalhando desde {{ f.em_servico|hora_br }}</span>{% else %}<span class="suave">—</span>{% endif %}</td>
               <td>{{ f.ultimo_relatorio|data_br }}</td>
-              <td>
-                <form method="post">{{ csrf_campo() }}
-                  <input type="hidden" name="acao" value="ativo"><input type="hidden" name="id" value="{{ f.id }}">
-                  <input type="hidden" name="valor" value="{{ 0 if f.ativo else 1 }}">
-                  <button class="botao pequeno {{ 'contorno' if f.ativo }}">{{ 'Desativar' if f.ativo else 'Reativar' }}</button>
-                </form>
+              <td class="acoes">
+                <a href="{{ url_for('dono.funcionarios', editar=f.id) }}#form-funcionario" class="botao pequeno contorno">Editar</a>
+                <button type="button" class="botao pequeno {{ 'contorno' if f.ativo }}"
+                        data-rest="{{ url_for('api.ativar_funcionario', funcionario_id=f.id) }}" data-metodo="PATCH"
+                        data-corpo='{"ativo": {{ 0 if f.ativo else 1 }}}'>{{ 'Desativar' if f.ativo else 'Reativar' }}</button>
+                <button type="button" class="botao pequeno contorno-vermelho"
+                        data-rest="{{ url_for('api.excluir_funcionario', funcionario_id=f.id) }}" data-metodo="DELETE"
+                        data-confirmar="Remover {{ f.nome }} da equipe? Esta ação não pode ser desfeita.">Excluir</button>
               </td>
             </tr>
           {% endfor %}
@@ -35,27 +37,28 @@
     {% endif %}
   </div>
 
-  <form method="post" class="card formulario">
-    {{ csrf_campo() }}
-    <input type="hidden" name="acao" value="adicionar">
-    <h2>Cadastrar funcionário</h2>
+  <form class="card formulario" id="form-funcionario"
+        data-rest="{{ url_for('api.atualizar_funcionario', funcionario_id=editar.id) if editar else url_for('api.criar_funcionario') }}"
+        data-metodo="{{ 'PUT' if editar else 'POST' }}">
+    <h2>{{ 'Editar funcionário' if editar else 'Cadastrar funcionário' }}</h2>
     <div class="campo">
       <label for="nome">Nome *</label>
-      <input id="nome" name="nome" required>
+      <input id="nome" name="nome" maxlength="120" value="{{ editar.nome if editar }}" required>
     </div>
     <div class="campo">
       <label for="email">E-mail *</label>
-      <input type="email" id="email" name="email" required>
+      <input type="email" id="email" name="email" maxlength="255" value="{{ editar.email if editar }}" required>
     </div>
     <div class="campo">
       <label for="funcao">Função</label>
-      <input id="funcao" name="funcao" placeholder="Ex.: Operador de máquinas" list="funcoes">
+      <input id="funcao" name="funcao" maxlength="80" value="{{ editar.funcao or '' if editar }}" placeholder="Ex.: Operador de máquinas" list="funcoes">
       <datalist id="funcoes">
         <option value="Operador de máquinas"><option value="Tratorista"><option value="Mecânico">
         <option value="Colhedor"><option value="Encarregado"><option value="Serviços gerais">
       </datalist>
     </div>
-    <button class="botao">Cadastrar</button>
+    <button class="botao">{{ 'Salvar alterações' if editar else 'Cadastrar' }}</button>
+    {% if editar %}<a href="{{ url_for('dono.funcionarios') }}" class="botao contorno">Cancelar</a>{% endif %}
     <div class="destaque pequeno-texto">
       <strong>Como o funcionário acessa?</strong> Ele cria uma conta do tipo <em>Funcionário</em>
       (ou entra com o Google) usando <strong>este mesmo e-mail</strong>. O vínculo com a fazenda é automático.

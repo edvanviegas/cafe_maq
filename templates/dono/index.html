@@ -39,7 +39,7 @@
     {% if not ultimos %}<p class="vazio">Nenhum relatório recebido ainda.</p>{% endif %}
     <ul class="lista-simples">
       {% for r in ultimos %}
-        <li><strong>{{ r.nome }}</strong> <span class="suave">· {{ r.data|data_br }} às {{ r.criado_em|hora_br }} · {{ r.feitas or 0 }}/{{ r.total }} atividades feitas</span></li>
+        <li><strong>{{ r.nome }}</strong> <span class="suave">· {{ r.data|data_br }} às {{ r.criado_em|hora_br }} · {{ (r.feitas or 0)|int }}/{{ r.total }} atividades feitas</span></li>
       {% endfor %}
     </ul>
     <p><a href="{{ url_for('dono.relatorios') }}">Ver todos os relatórios →</a></p>

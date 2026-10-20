@@ -23,7 +23,7 @@
   <div class="kpi"><span>Taxa de conclusão</span><strong>{{ '—' if taxa is none else taxa|num_br(0) ~ '%' }}</strong></div>
   <div class="kpi"><span>Relatórios entregues</span><strong>{{ tot.relatorios }}<small> / {{ tot.dias_trab }} dias trab.</small></strong></div>
   <div class="kpi {{ 'alerta-kpi' if ocorrencias }}"><span>Problemas relatados</span><strong>{{ ocorrencias|length }}</strong></div>
-  <div class="kpi"><span>Custo de manutenção</span><strong class="menor">{{ manut.custo|reais }}</strong><small>{{ manut.qtd }} serviço(s), {{ manut.preventivas }} preventiva(s)</small></div>
+  <div class="kpi"><span>Custo de manutenção</span><strong class="menor">{{ manut.custo|reais }}</strong><small>{{ manut.qtd }} serviço(s), {{ manut.preventivas|int }} preventiva(s)</small></div>
 </div>
 
 <div class="card">
@@ -86,6 +86,27 @@
         <tbody>
         {% for m in uso_maquinas %}
           <tr><td>{{ m.nome }}</td><td>{{ m.horas|horas_br }}</td><td>{{ m.dias }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+<div class="card">
+  <h2>Custo de manutenção por máquina</h2>
+  {% if not custos %}
+    <p class="vazio">Nenhuma manutenção registrada neste período.</p>
+  {% else %}
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr><th>Máquina</th><th>Serviços</th><th>Consertos</th><th>Custo</th><th>Problemas abertos</th></tr></thead>
+        <tbody>
+        {% for c in custos %}
+          <tr>
+            <td>{{ c.nome }}</td><td>{{ c.qtd_servicos }}</td><td>{{ c.qtd_corretivas }}</td>
+            <td>{{ c.custo_total|reais }}</td>
+            <td>{% if c.problemas_abertos %}<span class="badge vermelho">{{ c.problemas_abertos }}</span>{% else %}<span class="suave">—</span>{% endif %}</td>
+          </tr>
         {% endfor %}
         </tbody>
       </table>

@@ -30,19 +30,21 @@
             </form>
           {% endif %}
           <a href="{{ url_for('dono.fazendas', editar=f.id) }}" class="botao pequeno contorno">Editar</a>
+          <button type="button" class="botao pequeno contorno-vermelho"
+                  data-rest="{{ url_for('api.excluir_fazenda', fazenda_id=f.id) }}" data-metodo="DELETE"
+                  data-confirmar="Excluir a fazenda {{ f.nome }}? Esta ação não pode ser desfeita.">Excluir</button>
         </div>
       </div>
     {% endfor %}
   </div>
 
-  <form method="post" class="card formulario">
-    {{ csrf_campo() }}
-    <input type="hidden" name="acao" value="salvar">
-    <input type="hidden" name="id" value="{{ editar.id if editar }}">
+  <form class="card formulario"
+        data-rest="{{ url_for('api.atualizar_fazenda', fazenda_id=editar.id) if editar else url_for('api.criar_fazenda') }}"
+        data-metodo="{{ 'PUT' if editar else 'POST' }}">
     <h2>{{ 'Editar fazenda' if editar else 'Cadastrar fazenda' }}</h2>
     <div class="campo">
       <label for="nome">Nome da fazenda *</label>
-      <input id="nome" name="nome" value="{{ editar.nome if editar }}" required>
+      <input id="nome" name="nome" maxlength="120" value="{{ editar.nome if editar }}" required>
     </div>
     <div class="form-grade">
       <div class="campo">

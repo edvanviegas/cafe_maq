@@ -28,11 +28,12 @@
             <td class="acoes">
               {% if m.ativo %}<a href="{{ url_for('dono.manutencao', maquina=m.id) }}" class="botao pequeno">Manutenção</a>{% endif %}
               <a href="{{ url_for('dono.maquinas', editar=m.id) }}#form-maquina" class="botao pequeno contorno">Editar</a>
-              <form method="post">{{ csrf_campo() }}
-                <input type="hidden" name="acao" value="ativo"><input type="hidden" name="id" value="{{ m.id }}">
-                <input type="hidden" name="valor" value="{{ 0 if m.ativo else 1 }}">
-                <button class="botao pequeno contorno">{{ 'Desativar' if m.ativo else 'Reativar' }}</button>
-              </form>
+              <button type="button" class="botao pequeno contorno"
+                      data-rest="{{ url_for('api.ativar_maquina', maquina_id=m.id) }}" data-metodo="PATCH"
+                      data-corpo='{"ativo": {{ 0 if m.ativo else 1 }}}'>{{ 'Desativar' if m.ativo else 'Reativar' }}</button>
+              <button type="button" class="botao pequeno contorno-vermelho"
+                      data-rest="{{ url_for('api.excluir_maquina', maquina_id=m.id) }}" data-metodo="DELETE"
+                      data-confirmar="Excluir a máquina {{ m.nome }}? Esta ação não pode ser desfeita.">Excluir</button>
             </td>
           </tr>
         {% endfor %}
@@ -42,13 +43,12 @@
   {% endif %}
 </div>
 
-<form method="post" class="card formulario" id="form-maquina"
+<form class="card formulario" id="form-maquina"
+      data-rest="{{ url_for('api.atualizar_maquina', maquina_id=editar.id) if editar else url_for('api.criar_maquina') }}"
+      data-metodo="{{ 'PUT' if editar else 'POST' }}"
       data-api="{{ url_for('api.catalogo') }}"
       data-por-tipo="{{ por_tipo|tojson|forceescape }}"
       data-editando="{{ 1 if editar else 0 }}">
-  {{ csrf_campo() }}
-  <input type="hidden" name="acao" value="salvar_maquina">
-  <input type="hidden" name="id" value="{{ editar.id if editar }}">
   <h2>{{ 'Editar máquina' if editar else 'Cadastrar máquina' }}</h2>
 
   <div class="duas-colunas">
