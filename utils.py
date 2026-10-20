@@ -1,11 +1,14 @@
-"""Funções auxiliares: datas, formatação, segurança (CSRF) e login."""
+"""Funções auxiliares: datas, formatação, segurança (CSRF, sessão, logs, senhas) e login."""
+import logging
+import os
+import re
 import secrets
 from datetime import datetime, timedelta
 
-from flask import abort, current_app, flash, g, redirect, request, session, url_for
+from flask import abort, current_app, flash, g, jsonify, redirect, request, session, url_for
 from markupsafe import Markup, escape
 
-from banco import consulta, um
+from banco import consulta, definir_usuario_app, inserir, um, valor
 from catalogo import intervalo_revisao
 
 FORMATO = '%Y-%m-%d %H:%M:%S'
@@ -136,7 +139,9 @@ def inteiro(texto, padrao=0):
         return padrao
 
 
-# ===================== Segurança (CSRF) =====================
+# ===================== Segurança: CSRF =====================
+
+METODOS_QUE_ALTERAM = ('POST', 'PUT', 'PATCH', 'DELETE')
 
 
 def csrf_token():
@@ -150,9 +155,114 @@ def csrf_campo():
 
 
 def verificar_csrf():
-    """Roda antes de toda requisição POST (registrado em app.py)."""
-    if request.method == 'POST' and not secrets.compare_digest(csrf_token(), request.form.get('csrf', '')):
+    """Roda antes de toda requisição que altera dados (registrado em app.py).
+
+    Formulários mandam o token no campo "csrf"; o JavaScript (fetch) manda no
+    cabeçalho X-CSRF-Token. Sem o token certo, a requisição é recusada.
+    """
+    if request.method not in METODOS_QUE_ALTERAM:
+        return
+    enviado = request.form.get('csrf') or request.headers.get('X-CSRF-Token', '')
+    if not secrets.compare_digest(csrf_token(), enviado):
         abort(400, 'Sessão expirada. Volte e tente novamente.')
+
+
+# ===================== Segurança: cabeçalhos HTTP =====================
+
+
+def cabecalhos_seguranca(resposta):
+    """Cabeçalhos que dificultam ataques comuns no navegador (registrado em app.py)."""
+    resposta.headers.setdefault('X-Content-Type-Options', 'nosniff')          # não "adivinha" o tipo do arquivo
+    resposta.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')              # impede o site dentro de iframe alheio
+    resposta.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    resposta.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    if current_app.config['PRODUCAO']:
+        resposta.headers.setdefault('Strict-Transport-Security', 'max-age=31536000')  # força HTTPS
+    if session.get('uid'):
+        resposta.headers.setdefault('Cache-Control', 'no-store')              # páginas logadas não ficam em cache
+    return resposta
+
+
+# ===================== Segurança: logs =====================
+
+log_seguranca = logging.getLogger('cafemaq.seguranca')
+
+
+def configurar_log(app):
+    """Grava os eventos de segurança também em logs/seguranca.log (além da tabela log_acesso)."""
+    caminho = app.config['LOG_ARQUIVO']
+    os.makedirs(os.path.dirname(caminho), exist_ok=True)
+    if not log_seguranca.handlers:
+        arquivo = logging.FileHandler(caminho, encoding='utf-8')
+        arquivo.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+        log_seguranca.addHandler(arquivo)
+        log_seguranca.setLevel(logging.INFO)
+
+
+def ip_cliente():
+    return (request.remote_addr or '')[:45]
+
+
+def registrar_evento(evento, email=None, usuario_id=None):
+    """Registra um evento de segurança (login, falha, bloqueio, saída...) no banco e no arquivo de log."""
+    navegador = (request.headers.get('User-Agent') or '')[:255]
+    try:
+        inserir('INSERT INTO log_acesso (usuario_id, email, evento, ip, navegador, criado_em) VALUES (?, ?, ?, ?, ?, ?)',
+                (usuario_id, (email or '').lower()[:255] or None, evento, ip_cliente(), navegador, agora()))
+    except Exception:  # o log nunca pode derrubar o login
+        log_seguranca.exception('Falha ao gravar log_acesso')
+    nivel = logging.WARNING if evento in ('login_falha', 'login_bloqueado', 'acesso_negado') else logging.INFO
+    log_seguranca.log(nivel, 'evento=%s email=%s usuario=%s ip=%s', evento, email, usuario_id, ip_cliente())
+
+
+# ===================== Segurança: força bruta =====================
+
+SQL_FALHAS_RECENTES = '''SELECT COUNT(*) FROM log_acesso
+                         WHERE evento = 'login_falha' AND criado_em >= ? AND (ip = ? OR email = ?)'''
+
+
+def login_bloqueado(email):
+    """True se este e-mail ou este IP erraram a senha demais dentro da janela de tempo (config.py)."""
+    cfg = current_app.config
+    desde = (agora_dt() - cfg['LOGIN_JANELA']).strftime(FORMATO)
+    falhas = valor(SQL_FALHAS_RECENTES, (desde, ip_cliente(), (email or '').lower()))
+    return (falhas or 0) >= cfg['LOGIN_MAX_TENTATIVAS']
+
+
+# ===================== Segurança: política de senha =====================
+
+
+def problemas_senha(senha, email=''):
+    """Política de senhas: devolve a lista do que falta (lista vazia = senha aceita)."""
+    erros = []
+    if len(senha) < 8:
+        erros.append('A senha precisa ter pelo menos 8 caracteres.')
+    if not re.search(r'[A-Za-zÀ-ÿ]', senha) or not re.search(r'\d', senha):
+        erros.append('A senha precisa ter letras e números.')
+    if email and senha.lower() in (email.lower(), email.lower().split('@')[0]):
+        erros.append('A senha não pode ser igual ao seu e-mail.')
+    return erros
+
+
+# ===================== Segurança: sessão =====================
+
+
+def controlar_sessao():
+    """Encerra a sessão parada há mais tempo que SESSAO_INATIVIDADE e avisa o banco quem está logado."""
+    uid = session.get('uid')
+    if uid:
+        ultimo = session.get('ultimo_acesso')
+        limite = current_app.config['SESSAO_INATIVIDADE'].total_seconds()
+        agora_ts = datetime.now().timestamp()
+        if ultimo and agora_ts - ultimo > limite:
+            registrar_evento('sessao_expirada', usuario_id=uid)
+            session.clear()
+            g.pop('usuario', None)
+            flash('Sua sessão expirou por inatividade. Entre novamente.', 'info')
+            uid = None
+        else:
+            session['ultimo_acesso'] = agora_ts
+    definir_usuario_app(uid)
 
 
 # ===================== Login =====================
@@ -165,13 +275,16 @@ def usuario():
     return g.usuario
 
 
-def fazer_login(conta):
-    csrf = session.get('csrf')
+def fazer_login(conta, evento='login_ok'):
+    """Começa uma sessão nova (evita fixação de sessão), com token CSRF novo, e registra o login."""
     session.clear()
+    session.permanent = True  # respeita PERMANENT_SESSION_LIFETIME (config.py)
     session['uid'] = conta['id']
-    if csrf:
-        session['csrf'] = csrf
+    session['ultimo_acesso'] = datetime.now().timestamp()
+    session['csrf'] = secrets.token_hex(32)
     g.pop('usuario', None)
+    definir_usuario_app(conta['id'])
+    registrar_evento(evento, conta['email'], conta['id'])
     if conta['tipo'] == 'funcionario':
         vincular_funcionario(conta)
 
@@ -181,12 +294,21 @@ def pagina_inicial(conta):
 
 
 def exigir_login(tipo):
-    """Usado no before_request dos painéis. Devolve um redirect se não puder entrar."""
+    """Controle de acesso: usado no before_request dos painéis e da API.
+
+    Devolve uma resposta (redirect ou JSON 401/403) se a pessoa não puder entrar.
+    """
     u = usuario()
+    quer_json = request.path.startswith('/api/')
     if not u:
+        if quer_json:
+            return jsonify(erro='Entre na sua conta para continuar.'), 401
         flash('Entre na sua conta para continuar.', 'info')
         return redirect(url_for('auth.entrar'))
     if u['tipo'] != tipo:
+        registrar_evento('acesso_negado', u['email'], u['id'])
+        if quer_json:
+            return jsonify(erro='Você não tem permissão para isso.'), 403
         return redirect(pagina_inicial(u))
     return None
 

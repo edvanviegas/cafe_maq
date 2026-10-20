@@ -27,11 +27,13 @@
     <div class="form-grade">
       <div class="campo">
         <label for="senha">Senha</label>
-        <input type="password" id="senha" name="senha" minlength="6" required>
+        <input type="password" id="senha" name="senha" minlength="8" maxlength="128" autocomplete="new-password"
+               pattern="(?=.*[A-Za-zÀ-ÿ])(?=.*\d).{8,}" title="Mínimo de 8 caracteres, com letras e números" required>
+        <small>Mínimo de 8 caracteres, com letras e números.</small>
       </div>
       <div class="campo">
         <label for="senha2">Repita a senha</label>
-        <input type="password" id="senha2" name="senha2" minlength="6" required>
+        <input type="password" id="senha2" name="senha2" minlength="8" maxlength="128" autocomplete="new-password" required>
       </div>
     </div>
     <button class="botao largo">Criar conta</button>

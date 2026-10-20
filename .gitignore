@@ -1,6 +1,22 @@
-/.claude
+# Ambiente e segredos (NUNCA subir para o GitHub)
+.env
+.venv/
+venv/
+
+# Python
 __pycache__/
 *.pyc
-.venv/
+
+# Banco local, backups e logs
 database/*.db
+database/*.db.*
 database/*.sqlite
+backups/
+logs/
+
+# Editores e ferramentas
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+/.claude
