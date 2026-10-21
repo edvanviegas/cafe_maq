@@ -1,2 +1,5 @@
 Flask>=3.0
-tzdata ; sys_platform == "win32"
+PyMySQL[rsa]>=1.1        # driver do MySQL ([rsa] = login com caching_sha2_password do MySQL 8)
+python-dotenv>=1.0       # lê as configurações do arquivo .env
+gunicorn>=22 ; sys_platform != "win32"   # servidor de produção (Render/Linux)
+tzdata ; sys_platform == "win32"         # fuso horário no Windows

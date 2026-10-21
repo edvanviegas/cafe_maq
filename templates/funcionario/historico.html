@@ -34,7 +34,7 @@
         {% for r in relatorios %}
           <tr>
             <td>{{ r.data|data_br }}</td>
-            <td>{{ r.feitas or 0 }} de {{ r.total }}</td>
+            <td>{{ (r.feitas or 0)|int }} de {{ r.total }}</td>
             <td>{{ r.horas|horas_br }}</td>
           </tr>
         {% endfor %}

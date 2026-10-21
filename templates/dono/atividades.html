@@ -19,12 +19,14 @@
     </div>
     <div class="acoes">
       {% for valor, rotulo in ([('concluida', 'Concluir'), ('arquivada', 'Arquivar')] if pendente else [('pendente', 'Reabrir')]) %}
-        <form method="post">{{ csrf_campo() }}
-          <input type="hidden" name="acao" value="status"><input type="hidden" name="id" value="{{ a.id }}">
-          <input type="hidden" name="valor" value="{{ valor }}">
-          <button class="botao pequeno contorno">{{ rotulo }}</button>
-        </form>
+        <button type="button" class="botao pequeno contorno"
+                data-rest="{{ url_for('api.mudar_status_atividade', atividade_id=a.id) }}" data-metodo="PATCH"
+                data-corpo='{"status": "{{ valor }}"}'>{{ rotulo }}</button>
       {% endfor %}
+      <a href="{{ url_for('dono.atividades', editar=a.id) }}#form-atividade" class="botao pequeno contorno">Editar</a>
+      <button type="button" class="botao pequeno contorno-vermelho"
+              data-rest="{{ url_for('api.excluir_atividade', atividade_id=a.id) }}" data-metodo="DELETE"
+              data-confirmar="Excluir a atividade {{ a.titulo }}?">Excluir</button>
     </div>
   </div>
 {% endmacro %}
@@ -46,47 +48,48 @@
     </div>
   </div>
 
-  <form method="post" class="card formulario">
-    {{ csrf_campo() }}
-    <input type="hidden" name="acao" value="criar">
-    <h2>Nova atividade</h2>
+  <form class="card formulario" id="form-atividade"
+        data-rest="{{ url_for('api.atualizar_atividade', atividade_id=editar.id) if editar else url_for('api.criar_atividade') }}"
+        data-metodo="{{ 'PUT' if editar else 'POST' }}">
+    <h2>{{ 'Editar atividade' if editar else 'Nova atividade' }}</h2>
     <div class="campo">
       <label for="titulo">Título *</label>
-      <input id="titulo" name="titulo" required placeholder="Ex.: Roçar talhão 3">
+      <input id="titulo" name="titulo" maxlength="150" value="{{ editar.titulo if editar }}" required placeholder="Ex.: Roçar talhão 3">
     </div>
     <div class="campo">
       <label for="descricao">Instruções</label>
-      <textarea id="descricao" name="descricao" rows="3"></textarea>
+      <textarea id="descricao" name="descricao" rows="3" maxlength="2000">{{ editar.descricao or '' if editar }}</textarea>
     </div>
     <div class="form-grade">
       <div class="campo">
         <label for="tipo">Tipo</label>
         <select id="tipo" name="tipo">
           <option value="operacao">Operação (trabalho de campo)</option>
-          <option value="manutencao">Manutenção de máquina</option>
+          <option value="manutencao" {{ 'selected' if editar and editar.tipo == 'manutencao' }}>Manutenção de máquina</option>
         </select>
       </div>
       <div class="campo">
         <label for="data_prevista">Data prevista</label>
-        <input type="date" id="data_prevista" name="data_prevista" value="{{ hoje }}">
+        <input type="date" id="data_prevista" name="data_prevista" value="{{ (editar.data_prevista or '') if editar else hoje }}">
       </div>
       <div class="campo">
         <label for="maquina_id">Máquina usada</label>
         <select id="maquina_id" name="maquina_id">
           <option value="">Nenhuma</option>
-          {% for m in maquinas %}<option value="{{ m.id }}">{{ m.nome }}</option>{% endfor %}
+          {% for m in maquinas %}<option value="{{ m.id }}" {{ 'selected' if editar and editar.maquina_id == m.id }}>{{ m.nome }}</option>{% endfor %}
         </select>
       </div>
       <div class="campo">
         <label for="funcionario_id">Responsável</label>
         <select id="funcionario_id" name="funcionario_id">
           <option value="">Qualquer funcionário</option>
-          {% for f in funcionarios %}<option value="{{ f.id }}">{{ f.nome }}</option>{% endfor %}
+          {% for f in funcionarios %}<option value="{{ f.id }}" {{ 'selected' if editar and editar.funcionario_id == f.id }}>{{ f.nome }}</option>{% endfor %}
         </select>
       </div>
     </div>
-    <label class="checkbox"><input type="checkbox" name="recorrente"> Repetir todos os dias (ex.: checklist diário)</label>
-    <button class="botao">Criar atividade</button>
+    <label class="checkbox"><input type="checkbox" name="recorrente" {{ 'checked' if editar and editar.recorrente }}> Repetir todos os dias (ex.: checklist diário)</label>
+    <button class="botao">{{ 'Salvar alterações' if editar else 'Criar atividade' }}</button>
+    {% if editar %}<a href="{{ url_for('dono.atividades') }}" class="botao contorno">Cancelar</a>{% endif %}
   </form>
 </div>
 {% endblock %}

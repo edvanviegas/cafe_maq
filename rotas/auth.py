@@ -9,7 +9,7 @@ from flask import Blueprint, current_app, flash, redirect, render_template, requ
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from banco import consulta, inserir, um
-from utils import agora, campo, fazer_login, pagina_inicial, usuario
+from utils import agora, campo, fazer_login, login_bloqueado, pagina_inicial, problemas_senha, registrar_evento, usuario
 
 bp = Blueprint('auth', __name__)
 
@@ -23,15 +23,26 @@ def entrar():
 
     email = ''
     if request.method == 'POST':
-        email = campo('email')
-        conta = um('SELECT * FROM usuarios WHERE LOWER(email) = LOWER(?)', (email,))
+        email = campo('email').lower()
+
+        # Proteção contra força bruta: muitas senhas erradas seguidas bloqueiam por um tempo
+        if login_bloqueado(email):
+            registrar_evento('login_bloqueado', email)
+            minutos = int(current_app.config['LOGIN_JANELA'].total_seconds() // 60)
+            flash(f'Muitas tentativas erradas. Aguarde {minutos} minutos e tente de novo.', 'erro')
+            return render_template('auth/entrar.html', email=email), 429
+
+        conta = um('SELECT * FROM usuarios WHERE LOWER(email) = ?', (email,))
 
         if conta and conta['senha_hash'] and check_password_hash(conta['senha_hash'], campo('senha')):
             fazer_login(conta)
             return redirect(pagina_inicial(conta))
+
+        registrar_evento('login_falha', email, conta['id'] if conta else None)
         if conta and not conta['senha_hash']:
             flash('Esta conta foi criada com o Google. Use o botão "Continuar com o Google".', 'erro')
         else:
+            # Mesma mensagem para e-mail inexistente e senha errada: não revela quais e-mails têm conta
             flash('E-mail ou senha incorretos.', 'erro')
 
     return render_template('auth/entrar.html', email=email)
@@ -49,12 +60,11 @@ def cadastro():
         dados = {'nome': campo('nome'), 'email': campo('email').lower(), 'tipo': campo('tipo')}
         senha = campo('senha')
 
-        if len(dados['nome']) < 3:
+        if not 3 <= len(dados['nome']) <= 120:
             erros.append('Informe seu nome completo.')
-        if not EMAIL_VALIDO.match(dados['email']):
+        if not EMAIL_VALIDO.match(dados['email']) or len(dados['email']) > 255:
             erros.append('E-mail inválido.')
-        if len(senha) < 6:
-            erros.append('A senha precisa ter pelo menos 6 caracteres.')
+        erros.extend(problemas_senha(senha, dados['email']))  # política de senhas (utils.py)
         if senha != campo('senha2'):
             erros.append('As senhas não conferem.')
         if dados['tipo'] not in ('dono', 'funcionario'):
@@ -67,7 +77,7 @@ def cadastro():
                 'INSERT INTO usuarios (nome, email, senha_hash, tipo, criado_em) VALUES (?, ?, ?, ?, ?)',
                 (dados['nome'], dados['email'], generate_password_hash(senha), dados['tipo'], agora()))
             novo = um('SELECT * FROM usuarios WHERE id = ?', (novo_id,))
-            fazer_login(novo)
+            fazer_login(novo, evento='cadastro')
             flash('Conta criada! Bem-vindo(a) ao CafeMaq.', 'sucesso')
             return redirect(pagina_inicial(novo))
 
@@ -76,6 +86,8 @@ def cadastro():
 
 @bp.route('/sair')
 def sair():
+    if usuario():
+        registrar_evento('logout', usuario()['email'], usuario()['id'])
     session.clear()
     return redirect(url_for('publico.index'))
 
@@ -104,6 +116,7 @@ def google():
 
     dados = validar_token_google(campo('credential'))
     if not dados:
+        registrar_evento('login_falha')  # token do Google inválido
         flash('Não foi possível validar o login com o Google. Tente novamente.', 'erro')
         return redirect(url_for('auth.entrar'))
 
@@ -112,7 +125,7 @@ def google():
     if conta:
         if not conta['google_id']:
             consulta('UPDATE usuarios SET google_id = ? WHERE id = ?', (dados['sub'], conta['id']))
-        fazer_login(conta)
+        fazer_login(conta, evento='login_google')
         return redirect(pagina_inicial(conta))
 
     # Primeiro acesso: guarda os dados e pergunta se é dono ou funcionário
@@ -138,7 +151,7 @@ def escolher_tipo():
                 'INSERT INTO usuarios (nome, email, google_id, tipo, criado_em) VALUES (?, ?, ?, ?, ?)',
                 (google['nome'], google['email'], google['sub'], tipo, agora()))
             novo = um('SELECT * FROM usuarios WHERE id = ?', (novo_id,))
-            fazer_login(novo)
+            fazer_login(novo, evento='cadastro')
             flash('Conta criada! Bem-vindo(a) ao CafeMaq.', 'sucesso')
             return redirect(pagina_inicial(novo))
         flash('Escolha o tipo de conta.', 'erro')

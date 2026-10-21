@@ -5,8 +5,8 @@ from datetime import timedelta
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 
 from banco import consulta, inserir, todos, um, valor
-from catalogo import TIPOS, nome_tipo
-from rotas.auth import EMAIL_VALIDO
+from catalogo import nome_tipo
+from rotas.api import resumo_custos
 from utils import (agora, campo, data_iso, dias_atras, duracao_ponto, exigir_login, fazenda_atual, hoje, inteiro,
                    numero_ou_nulo, para_data, situacao_revisao, usuario)
 
@@ -182,6 +182,8 @@ def desempenho():
         periodo=periodo, ref=data_iso(ref), anterior=data_iso(anterior), proximo=data_iso(proximo), rotulo=rotulo,
         tot=tot, taxa=taxa, ocorrencias=ocorrencias, manut=manut, uso_maquinas=uso_maquinas, por_func=lista,
         grafico=grafico,
+        # Ranking de custo por máquina: no MySQL vem do procedimento sp_resumo_custos
+        custos=[c for c in resumo_custos(fid, ini, fim) if c['qtd_servicos']],
         max_grafico=max([1] + [h for _, h in grafico]),
         max_horas_func=max([1] + [f['horas'] for f in lista]),
     )
@@ -222,33 +224,13 @@ def relatorios():
 # ===================== Atividades =====================
 
 
-@bp.route('/atividades', methods=['GET', 'POST'])
+@bp.route('/atividades')
 def atividades():
+    """Lista as atividades. Criar, editar, concluir e excluir: API REST /api/atividades (rotas/api.py)."""
     fid = g.fazenda['id']
-
-    if request.method == 'POST':
-        acao = campo('acao')
-        if acao == 'criar':
-            titulo = campo('titulo')
-            if not titulo:
-                flash('Informe o título da atividade.', 'erro')
-                return redirect(url_for('dono.atividades'))
-            # Só aceita máquina e funcionário que sejam desta fazenda
-            maquina = maquina_da_fazenda(campo('maquina_id'))
-            func = um('SELECT id FROM funcionarios WHERE id = ? AND fazenda_id = ?', (inteiro(campo('funcionario_id')), fid))
-            inserir(
-                '''INSERT INTO atividades (fazenda_id, titulo, descricao, tipo, maquina_id, funcionario_id,
-                                           data_prevista, recorrente, criado_em)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (fid, titulo, campo('descricao') or None, 'manutencao' if campo('tipo') == 'manutencao' else 'operacao',
-                 maquina['id'] if maquina else None, func['id'] if func else None, campo('data_prevista') or None,
-                 1 if 'recorrente' in request.form else 0, agora()))
-            flash('Atividade criada. Ela já aparece no formulário dos funcionários.', 'sucesso')
-
-        if acao == 'status' and campo('valor') in ('pendente', 'concluida', 'arquivada'):
-            consulta('UPDATE atividades SET status = ? WHERE id = ? AND fazenda_id = ?',
-                     (campo('valor'), inteiro(campo('id')), fid))
-        return redirect(url_for('dono.atividades'))
+    editar = None
+    if 'editar' in request.args:
+        editar = um('SELECT * FROM atividades WHERE id = ? AND fazenda_id = ?', (inteiro(request.args['editar']), fid))
 
     sql_base = '''SELECT a.*, m.nome AS maquina, f.nome AS funcionario,
                          (SELECT MAX(r.data) FROM relatorio_itens i JOIN relatorios r ON r.id = i.relatorio_id
@@ -264,6 +246,7 @@ def atividades():
         concluidas=todos(sql_base + ' ORDER BY a.id DESC LIMIT 20', (fid, 'concluida')),
         maquinas=todos('SELECT id, nome FROM maquinas WHERE fazenda_id = ? AND ativo = 1 ORDER BY nome', (fid,)),
         funcionarios=todos('SELECT id, nome FROM funcionarios WHERE fazenda_id = ? AND ativo = 1 ORDER BY nome', (fid,)),
+        editar=editar,
     )
 
 
@@ -286,41 +269,10 @@ def maquinas_com_resumo(fid, so_ativas=False):
     return lista
 
 
-@bp.route('/maquinas', methods=['GET', 'POST'])
+@bp.route('/maquinas')
 def maquinas():
+    """Lista as máquinas. Cadastrar, editar, desativar e excluir: API REST /api/maquinas (rotas/api.py)."""
     fid = g.fazenda['id']
-
-    if request.method == 'POST':
-        acao = campo('acao')
-        if acao == 'salvar_maquina':
-            tipo = campo('tipo') if campo('tipo') in TIPOS else 'outra'
-            ano = numero_ou_nulo(campo('ano'))
-            dados = (
-                campo('nome') or TIPOS[tipo]['nome'],
-                tipo,
-                campo('marca') or None,
-                campo('modelo') or None,
-                int(ano) if ano else None,
-                numero_ou_nulo(campo('horimetro')) or 0,
-                numero_ou_nulo(campo('revisao_horas')),
-                numero_ou_nulo(campo('preco')),
-            )
-            existente = maquina_da_fazenda(campo('id'))
-            if existente:
-                consulta('''UPDATE maquinas SET nome = ?, tipo = ?, marca = ?, modelo = ?, ano = ?, horimetro = ?,
-                                   revisao_horas = ?, preco = ? WHERE id = ?''', dados + (existente['id'],))
-                flash('Máquina atualizada.', 'sucesso')
-            else:
-                inserir('''INSERT INTO maquinas (nome, tipo, marca, modelo, ano, horimetro, revisao_horas, preco,
-                                                 fazenda_id, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                        dados + (fid, agora()))
-                flash('Máquina cadastrada. Os registros de manutenção ficam na aba Manutenção.', 'sucesso')
-
-        if acao == 'ativo':
-            consulta('UPDATE maquinas SET ativo = ? WHERE id = ? AND fazenda_id = ?',
-                     (inteiro(campo('valor')), inteiro(campo('id')), fid))
-        return redirect(url_for('dono.maquinas'))
-
     lista = maquinas_com_resumo(fid)
     # Quantas máquinas de cada tipo já existem, para sugerir o apelido (ex.: "Trator cafeeiro 02")
     por_tipo = {}
@@ -437,43 +389,19 @@ def manutencao():
 # ===================== Funcionários =====================
 
 
-@bp.route('/funcionarios', methods=['GET', 'POST'])
+@bp.route('/funcionarios')
 def funcionarios():
+    """Lista a equipe. Cadastrar, editar, desativar e excluir: API REST /api/funcionarios (rotas/api.py)."""
     fid = g.fazenda['id']
-
-    if request.method == 'POST':
-        acao = campo('acao')
-        if acao == 'adicionar':
-            nome = campo('nome')
-            email = campo('email').lower()
-            if not nome or not EMAIL_VALIDO.match(email):
-                flash('Informe nome e um e-mail válido.', 'erro')
-            elif um('SELECT id FROM funcionarios WHERE fazenda_id = ? AND LOWER(email) = ?', (fid, email)):
-                flash('Este e-mail já está cadastrado nesta fazenda.', 'erro')
-            else:
-                conta = um('SELECT * FROM usuarios WHERE LOWER(email) = ?', (email,))
-                if conta and conta['tipo'] != 'funcionario':
-                    flash('Este e-mail pertence a uma conta de dono. O funcionário precisa de uma conta do tipo '
-                          '"Funcionário".', 'erro')
-                    return redirect(url_for('dono.funcionarios'))
-                inserir('''INSERT INTO funcionarios (fazenda_id, usuario_id, nome, email, funcao, criado_em)
-                           VALUES (?, ?, ?, ?, ?, ?)''',
-                        (fid, conta['id'] if conta else None, nome, email, campo('funcao') or None, agora()))
-                flash(f'{nome} já tinha conta e foi vinculado(a) à fazenda.' if conta else
-                      f'{nome} cadastrado(a). Peça para criar uma conta de funcionário com o e-mail {email}.', 'sucesso')
-
-        if acao == 'ativo':
-            consulta('UPDATE funcionarios SET ativo = ? WHERE id = ? AND fazenda_id = ?',
-                     (inteiro(campo('valor')), inteiro(campo('id')), fid))
-            flash('Cadastro atualizado.', 'sucesso')
-        return redirect(url_for('dono.funcionarios'))
-
     lista = todos(
         '''SELECT f.*,
                   (SELECT entrada FROM ponto WHERE funcionario_id = f.id AND saida IS NULL ORDER BY entrada DESC LIMIT 1) AS em_servico,
                   (SELECT MAX(data) FROM relatorios WHERE funcionario_id = f.id) AS ultimo_relatorio
            FROM funcionarios f WHERE fazenda_id = ? ORDER BY ativo DESC, nome''', (fid,))
-    return render_template('dono/funcionarios.html', aba='funcionarios', funcionarios=lista)
+    editar = None
+    if 'editar' in request.args:
+        editar = um('SELECT * FROM funcionarios WHERE id = ? AND fazenda_id = ?', (inteiro(request.args['editar']), fid))
+    return render_template('dono/funcionarios.html', aba='funcionarios', funcionarios=lista, editar=editar)
 
 
 # ===================== Fazendas =====================
@@ -484,29 +412,13 @@ def fazendas():
     u = usuario()
 
     if request.method == 'POST':
+        # Cadastrar, editar e excluir fazendas: API REST /api/fazendas (rotas/api.py).
+        # Aqui só troca a fazenda em uso (fica guardada na sessão).
         acao = campo('acao')
-        if acao == 'salvar':
-            nome = campo('nome')
-            if not nome:
-                flash('Informe o nome da fazenda.', 'erro')
-                return redirect(url_for('dono.fazendas'))
-            producao = numero_ou_nulo(campo('producao_sacas'))
-            dados = (nome, campo('municipio') or None, campo('estado')[:2].upper() or None,
-                     numero_ou_nulo(campo('area_ha')), int(producao) if producao is not None else None)
-            fazenda_id = inteiro(campo('id'))
-            if fazenda_id:
-                consulta('''UPDATE fazendas SET nome = ?, municipio = ?, estado = ?, area_ha = ?, producao_sacas = ?
-                            WHERE id = ? AND dono_id = ?''', dados + (fazenda_id, u['id']))
-                flash('Fazenda atualizada.', 'sucesso')
-            else:
-                session['fazenda_id'] = inserir(
-                    '''INSERT INTO fazendas (nome, municipio, estado, area_ha, producao_sacas, dono_id, criado_em)
-                       VALUES (?, ?, ?, ?, ?, ?, ?)''', dados + (u['id'], agora()))
-                flash('Fazenda cadastrada! Agora cadastre seus funcionários e máquinas.', 'sucesso')
-                return redirect(url_for('dono.index'))
-
         if acao == 'selecionar':
-            session['fazenda_id'] = inteiro(campo('id'))
+            escolhida = um('SELECT id FROM fazendas WHERE id = ? AND dono_id = ?', (inteiro(campo('id')), u['id']))
+            if escolhida:
+                session['fazenda_id'] = escolhida['id']
             return redirect(url_for('dono.index'))
         return redirect(url_for('dono.fazendas'))
 
