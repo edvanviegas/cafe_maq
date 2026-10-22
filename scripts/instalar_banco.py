@@ -1,7 +1,12 @@
 """
-Instala o banco MySQL do CafeMaq executando os scripts de database/mysql em ordem.
+Instala o banco do CafeMaq.
 
-Uso (na pasta do projeto):
+SQLite (o site publicado; não precisa de senha nem de servidor):
+    python scripts/instalar_banco.py --sqlite --exemplo   # tabelas, gatilhos e dados de demonstração
+O arquivo é o do .env (CAFEMAQ_BANCO; padrão database/cafemaq.db). Sem --exemplo
+não precisa rodar nada: o site cria as tabelas sozinho ao iniciar.
+
+MySQL (entrega de Banco de Dados II), executando os scripts de database/mysql em ordem:
     python scripts/instalar_banco.py                 # estrutura, usuários e rotinas
     python scripts/instalar_banco.py --exemplo       # ... e também os dados de demonstração
     python scripts/instalar_banco.py --host 127.0.0.1 --usuario root
@@ -18,10 +23,10 @@ import argparse
 import getpass
 import os
 import re
+import sqlite3
 import sys
 
-import pymysql
-
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 PASTA_SQL = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'database', 'mysql')
 SCRIPTS = ['01_estrutura.sql', '02_usuarios.sql', '03_rotinas.sql']
 
@@ -64,7 +69,7 @@ def executar(conexao, arquivo, ignorar_erros=(), base='cafemaq'):
         for comando in lista:
             try:
                 cur.execute(comando)
-            except pymysql.MySQLError as erro:
+            except Exception as erro:  # pymysql.MySQLError
                 if any(trecho in comando for trecho in ignorar_erros):
                     print(f'   aviso (ignorado): {erro.args[-1]}')
                     continue
@@ -73,8 +78,34 @@ def executar(conexao, arquivo, ignorar_erros=(), base='cafemaq'):
     print(f'OK  {arquivo} ({len(lista)} comandos)')
 
 
+def instalar_sqlite(exemplo):
+    """Cria as tabelas e os gatilhos no arquivo SQLite do .env e, se pedido, os dados de exemplo."""
+    sys.path.insert(0, RAIZ)
+    import config  # lê o .env
+
+    caminho = config.BANCO
+    os.makedirs(os.path.dirname(caminho), exist_ok=True)
+    db = sqlite3.connect(caminho)
+    try:
+        db.execute('PRAGMA foreign_keys = ON')
+        with open(os.path.join(RAIZ, 'database', 'sqlite', 'schema.sql'), encoding='utf-8') as f:
+            db.executescript(f.read())
+        print(f'OK  tabelas e gatilhos em {caminho}')
+        if exemplo:
+            if db.execute('SELECT COUNT(*) FROM usuarios').fetchone()[0]:
+                print('O banco já tem contas cadastradas: os dados de exemplo não foram carregados.')
+                print(f'Para começar do zero, apague {caminho} e rode de novo.')
+                sys.exit(1)
+            with open(os.path.join(RAIZ, 'database', 'sqlite', 'dados_exemplo.sql'), encoding='utf-8') as f:
+                db.executescript(f.read())
+            print('OK  dados de exemplo (entre com dono@cafemaq.com.br, senha Cafe@2026)')
+    finally:
+        db.close()
+
+
 def main():
-    p = argparse.ArgumentParser(description='Instala o banco MySQL do CafeMaq')
+    p = argparse.ArgumentParser(description='Instala o banco do CafeMaq (SQLite ou MySQL)')
+    p.add_argument('--sqlite', action='store_true', help='instala no SQLite do .env em vez do MySQL')
     p.add_argument('--host', default='localhost')
     p.add_argument('--porta', type=int, default=3306)
     p.add_argument('--usuario', default='root')
@@ -84,6 +115,12 @@ def main():
     p.add_argument('--sem-usuarios', action='store_true',
                    help='não roda o 02_usuarios.sql (hospedagens que não deixam criar usuários)')
     args = p.parse_args()
+
+    if args.sqlite:
+        instalar_sqlite(args.exemplo)
+        return
+
+    import pymysql  # só é necessário para o MySQL
 
     senha = args.senha if args.senha is not None else getpass.getpass(f'Senha do MySQL para {args.usuario}: ')
     conexao = pymysql.connect(host=args.host, port=args.porta, user=args.usuario, password=senha,

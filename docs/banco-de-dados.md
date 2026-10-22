@@ -12,6 +12,18 @@ Documentação da disciplina **Banco de Dados II**. O banco oficial do projeto �
 | Dados de demonstração | [`database/mysql/04_dados_exemplo.sql`](../database/mysql/04_dados_exemplo.sql) |
 | Cópia de segurança (dump) | [`database/mysql/cafemaq_dump.sql`](../database/mysql/cafemaq_dump.sql) |
 
+## MySQL e SQLite
+
+| | MySQL (`database/mysql`) | SQLite (`database/sqlite`) |
+|---|---|---|
+| Para que serve | **Entrega desta disciplina** | Banco do **site publicado** (leve, um arquivo só) |
+| Tabelas, chaves e índices | ✔ | ✔ |
+| Gatilhos (validação e auditoria) | ✔ 9 gatilhos | ✔ os mesmos 9 (10 no total, porque a data de resolução virou dois) |
+| Usuários e permissões | ✔ admin, aplicação e backup | — o SQLite não tem usuários |
+| Funções e procedimentos | ✔ 3 + 3 | — o SQLite não tem; o site faz a mesma conta em Python |
+
+O sistema funciona com os dois: basta trocar `DB_TIPO` no `.env`.
+
 ## Instalação
 
 ```bash

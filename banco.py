@@ -2,8 +2,9 @@
 Conexão com o banco de dados e funções curtas para consultas.
 
 Funciona com dois bancos, escolhidos pela variável DB_TIPO do arquivo .env:
-    mysql   -> banco oficial do projeto (usuários, funções, procedimentos e triggers)
-    sqlite  -> arquivo local, para testar rápido sem instalar nada
+    sqlite  -> um arquivo, sem instalar nada (padrão; usado no site publicado)
+    mysql   -> versão da disciplina de Banco de Dados II (usuários, funções,
+               procedimentos e triggers)
 
 As rotas escrevem o SQL sempre com "?" nos parâmetros (consulta parametrizada,
 que impede SQL Injection). Para o MySQL, o "?" é trocado por "%s" aqui.
@@ -144,9 +145,14 @@ def chamar_procedimento(nome, params=()):
 
 
 def definir_usuario_app(usuario_id):
-    """Informa ao MySQL quem está logado, para os triggers de auditoria (@app_usuario_id)."""
+    """Informa ao banco quem está logado, para os triggers de auditoria.
+
+    MySQL: variável de sessão @app_usuario_id. SQLite: tabela sessao_app (schema.sql).
+    """
     if eh_mysql():
         consulta('SET @app_usuario_id = ?', (usuario_id,))
+    else:
+        consulta('UPDATE sessao_app SET usuario_id = ? WHERE id = 1', (usuario_id,))
 
 
 class transacao:

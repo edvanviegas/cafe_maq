@@ -46,35 +46,28 @@ que viram alertas de manutenção para o dono.
 | Camada | Tecnologia |
 |---|---|
 | Back-end | Python 3 + Flask (blueprints), API REST em JSON |
-| Banco de dados | MySQL 8 (usuários, funções, procedimentos e triggers) · SQLite para teste rápido |
+| Banco de dados | SQLite no site publicado (com triggers) · MySQL 8 na entrega de BD II (usuários, funções, procedimentos e triggers) |
 | Front-end | HTML5 + Jinja2, CSS responsivo, JavaScript puro (`fetch`) |
 | Segurança | Hash scrypt, CSRF, sessões com expiração, limite de tentativas, logs e auditoria |
 
 ## Como rodar
 
-Precisa do **Python 3.10+** e, para o banco oficial, do **MySQL 8** (ou MySQL Workbench / XAMPP).
+Precisa só do **Python 3.10+**. O banco padrão é o **SQLite**: um arquivo, sem instalar nada.
 
 ```bash
 git clone https://github.com/edvanviegas/cafe_maq.git
 cd cafe_maq
 pip install -r requirements.txt
-cp .env.example .env          # no Windows: copy .env.example .env
-```
-
-**Com MySQL (oficial):**
-
-```bash
-python scripts/instalar_banco.py --exemplo    # cria base, usuários, rotinas e dados de exemplo
-```
-
-No `.env`, deixe `DB_TIPO=mysql`, coloque a senha do usuário `cafemaq_app` em `DB_SENHA` e gere uma
-`SECRET_KEY` com `python -c "import secrets; print(secrets.token_hex(32))"`.
-
-**Sem instalar nada (SQLite):** no `.env`, troque para `DB_TIPO=sqlite`. O banco é criado sozinho.
-
-```bash
+cp .env.example .env                                  # no Windows: copy .env.example .env
+python scripts/instalar_banco.py --sqlite --exemplo   # tabelas, gatilhos e dados de exemplo
 python app.py
 ```
+
+No `.env`, gere uma `SECRET_KEY` com `python -c "import secrets; print(secrets.token_hex(32))"`.
+
+**Com MySQL (versão de Banco de Dados II):** troque para `DB_TIPO=mysql` no `.env`, coloque a senha do
+usuário `cafemaq_app` em `DB_SENHA` e rode `python scripts/instalar_banco.py --exemplo`
+(cria base, usuários, funções, procedimentos, triggers e dados de exemplo).
 
 Abra <http://localhost:5000>. Com os dados de exemplo, entre com `dono@cafemaq.com.br` ou
 `joao@cafemaq.com.br` (senha `Cafe@2026`).
@@ -102,7 +95,7 @@ cafe_maq/
 ├── static/                 # CSS, JavaScript e imagens
 ├── database/
 │   ├── mysql/              # 01_estrutura, 02_usuarios, 03_rotinas, 04_dados_exemplo, dump
-│   └── sqlite/schema.sql   # versão de teste
+│   └── sqlite/             # schema.sql (tabelas e triggers) e dados_exemplo.sql — usado no site
 ├── scripts/                # instalar_banco.py e backup.py
 └── docs/                   # documentação, modelo lógico e telas
 ```

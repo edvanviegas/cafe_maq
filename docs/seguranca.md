@@ -39,7 +39,7 @@ funcionais que protejam a **Confidencialidade, Integridade e Disponibilidade (CI
 
 - **`log_acesso`** (gravado pela aplicação): `login_ok`, `login_falha`, `login_bloqueado`, `login_google`,
   `cadastro`, `logout`, `sessao_expirada`, `acesso_negado` — com data, IP, navegador e e-mail.
-- **`log_auditoria`** (gravado pelos **gatilhos** do MySQL): toda alteração/exclusão de máquinas,
+- **`log_auditoria`** (gravado pelos **gatilhos** do banco, no MySQL e no SQLite do site publicado): toda alteração/exclusão de máquinas,
   funcionários, fazendas e contas, e toda manutenção nova, com os dados **antes e depois** em JSON, o
   usuário do banco e a pessoa logada no site. Como é o banco que grava, nem um bug no site deixa de auditar.
 - **`logs/seguranca.log`**: os mesmos eventos de autenticação em arquivo, para monitorar no servidor
